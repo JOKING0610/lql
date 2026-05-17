@@ -1,0 +1,2550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>零柒零音乐 · 管理员后台</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #f5f7fb;
+            color: #1e293b;
+        }
+        .container { 
+            display: flex; 
+            min-height: 100vh; 
+        }
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        .sidebar-header h1 {
+            font-size: 20px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .sidebar-nav {
+            flex: 1;
+        }
+        .nav-item {
+            padding: 14px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-left-color: #3b82f6;
+            color: #3b82f6;
+        }
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 30px;
+        }
+        .page-header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .page-header h2 {
+            font-size: 24px;
+            color: #1e293b;
+        }
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .login-panel { display: none; }
+        .login-panel.active { display: flex; }
+        .login-card {
+            max-width: 400px;
+            margin: 80px auto;
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+        }
+        .page { display: none; }
+        .page.active { display: block; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 6px; font-weight: 500; }
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 15px;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #e2e8f0;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        .btn-warning:hover { background: #d97706; }
+        .btn-success {
+            background: #22c55e;
+            color: white;
+        }
+        .btn-success:hover { background: #16a34a; }
+        .btn-sm { padding: 6px 12px; font-size: 13px; }
+        .btn-outline {
+            background: white;
+            border: 1px solid #cbd5e1;
+            color: #1e293b;
+        }
+        .btn-outline:hover { background: #f1f5f9; }
+        
+        table {
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            border-collapse: collapse;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        th {
+            text-align: left;
+            padding: 16px;
+            background: #f8fafc;
+            font-weight: 600;
+            font-size: 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #eef2f6;
+            font-size: 14px;
+        }
+        .badge {
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-admin { background: #fef3c7; color: #b45309; }
+        .badge-user { background: #e2e8f0; color: #334155; }
+        .badge-active { background: #dcfce7; color: #15803d; }
+        .badge-inactive { background: #f1f5f9; color: #475569; }
+        .badge-banned { background: #fee2e2; color: #dc2626; }
+        .badge-vip { background: #fef3c7; color: #b45309; }
+        .badge-vip-permanent { background: #fcd34d; color: #92400e; }
+        .badge-non-vip { background: #f1f5f9; color: #64748b; }
+        .btn-vip { background: #fef3c7; color: #b45309; }
+        .btn-vip:hover { background: #fde68a; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+            z-index: 1000;
+        }
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal {
+            background: white;
+            border-radius: 28px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-large {
+            max-width: 800px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 60px;
+            font-size: 14px;
+            opacity: 0;
+            transition: 0.2s;
+            pointer-events: none;
+            z-index: 2000;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(-10px); }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #e2e8f0; }
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #ccc; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: 0.2s;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 16px;
+        }
+        .card-body {
+            padding: 20px 24px;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-content {
+            margin: 16px 0;
+            line-height: 1.5;
+            color: #334155;
+            white-space: pre-wrap;
+        }
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            border-top: 1px solid #eef2ff;
+            padding-top: 16px;
+            margin-top: 8px;
+        }
+        
+        .icon-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+        }
+        .icon-option {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-option:hover {
+            background: #e2e8f0;
+            transform: scale(1.05);
+        }
+        
+        .key-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+        .key-item:hover {
+            border-color: #3b82f6;
+        }
+        .key-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .key-value {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .key-meta {
+            font-size: 12px;
+            color: #64748b;
+            display: flex;
+            gap: 16px;
+        }
+        .key-status {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .key-status.unused { background: #dcfce7; color: #15803d; }
+        .key-status.used { background: #fef3c7; color: #b45309; }
+        .key-status.expired { background: #fee2e2; color: #dc2626; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+                padding: 20px 0;
+            }
+            .sidebar-header h1, .nav-item span, .sidebar-footer > * {
+                display: none;
+            }
+            .nav-item {
+                justify-content: center;
+                padding: 14px;
+            }
+            .main-content {
+                margin-left: 60px;
+                padding: 20px;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar" style="display: none;">
+        <div class="sidebar-header">
+            <h1><i class="fas fa-crown"></i> 管理后台</h1>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item active" data-page="users" onclick="switchPage('users')">
+                <i class="fas fa-users"></i>
+                <span>用户管理</span>
+            </div>
+            <div class="nav-item" data-page="announcements" onclick="switchPage('announcements')">
+                <i class="fas fa-bullhorn"></i>
+                <span>公告管理</span>
+            </div>
+            <div class="nav-item" data-page="keys" onclick="switchPage('keys')">
+                <i class="fas fa-key"></i>
+                <span>密钥管理</span>
+            </div>
+            <div class="nav-item" data-page="redeem-codes" onclick="switchPage('redeem-codes')">
+                <i class="fas fa-ticket-alt"></i>
+                <span>积分密钥</span>
+            </div>
+            <div class="nav-item" data-page="signup" onclick="switchPage('signup')">
+                <i class="fas fa-user-plus"></i>
+                <span>账号创建</span>
+            </div>
+            <div class="nav-item" data-page="vip-tokens" onclick="switchPage('vip-tokens')">
+                <i class="fas fa-key"></i>
+                <span>VIP Token</span>
+            </div>
+            <div class="nav-item" data-page="data-clear" onclick="switchPage('data-clear')">
+                <i class="fas fa-trash-alt"></i>
+                <span>数据清理</span>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <div id="userInfo" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <i class="fas fa-user-circle" style="font-size: 24px; color: #94a3b8;"></i>
+                <span id="sidebarUsername"></span>
+            </div>
+            <button class="btn btn-sm" onclick="adminLogout()" style="background: rgba(255,255,255,0.1); color: white;">
+                <i class="fas fa-sign-out-alt"></i> 退出
+            </button>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 登录面板 -->
+        <div id="loginPanel" class="login-panel active">
+            <div class="login-card">
+                <h2 style="margin-bottom: 24px; text-align: center;">管理员登录</h2>
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="loginUsername" placeholder="管理员账号">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="loginPassword" placeholder="密码">
+                </div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="adminLogin()">登录</button>
+                <p id="loginError" style="color: #ef4444; margin-top: 16px; text-align: center;"></p>
+            </div>
+        </div>
+        <div style="margin-top:12px;">
+            <input type="text" id="publicTokenInput" placeholder="输入公共Token" style="margin-right:8px;">
+            <button class="btn" onclick="usePublicToken()">调用</button>
+        </div>
+
+        <!-- 用户管理页面 -->
+        <div id="usersPage" class="page">
+            <div class="page-header">
+                <h2><i class="fas fa-users"></i> 用户管理</h2>
+                <div class="header-actions">
+                    <button class="btn" onclick="refreshUserList()"><i class="fas fa-sync-alt"></i> 刷新</button>
+                    <span style="color: #64748b;" id="totalUsersDisplay"></span>
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table id="userTable">
+                    <thead>
+                        <tr>
+                            <th>用户</th>
+                            <th>ID</th>
+                            <th>角色</th>
+                            <th>状态</th>
+                            <th>会员</th>
+                            <th>登录次数</th>
+                            <th>积分</th>
+                            <th>播放次数</th>
+                            <th>总时长</th>
+                            <th>注册时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <tr><td colspan="10" style="text-align: center;">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 公告管理页面 -->
+        <div id="announcementsPage" class="page">
+            <div class="page-header">
+                <h2><i class="fas fa-bullhorn"></i> 公告管理</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="openAnnouncementModal()"><i class="fas fa-plus"></i> 新建公告</button>
+                </div>
+            </div>
+            <div id="announcementsContainer">
+                <div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> 加载公告中...</div>
+            </div>
+        </div>
+
+        <!-- 密钥管理页面 -->
+        <div id="keysPage" class="page">
+            <div class="page-header">
+                <h2><i class="fas fa-key"></i> 密钥管理</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="generateKeys()"><i class="fas fa-plus"></i> 生成密钥</button>
+                    <button class="btn btn-outline" onclick="loadAllData()"><i class="fas fa-sync-alt"></i> 刷新</button>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statTotal">-</div>
+                    <div class="stat-label">总密钥数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statUnused" style="color: #10b981;">-</div>
+                    <div class="stat-label">未使用</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statUsed" style="color: #f59e0b;">-</div>
+                    <div class="stat-label">已使用</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statExpired" style="color: #ef4444;">-</div>
+                    <div class="stat-label">已过期</div>
+                </div>
+            </div>
+            <div style="margin-bottom: 20px; padding: 20px; background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <h4 style="margin-bottom: 16px;"><i class="fas fa-plus"></i> 生成新密钥</h4>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                    <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom: 0;">
+                        <label>生成数量</label>
+                        <input type="number" id="generateCount" value="1" min="1" max="20">
+                    </div>
+                    <div class="form-group" style="flex: 1; min-width: 150px; margin-bottom: 0;">
+                        <label>有效期</label>
+                        <select id="expiresDuration">
+                            <option value="1">1 分钟</option>
+                            <option value="5">5 分钟</option>
+                            <option value="10">10 分钟</option>
+                            <option value="30">30 分钟</option>
+                            <option value="60">1 小时</option>
+                            <option value="180">3 小时</option>
+                            <option value="360">6 小时</option>
+                            <option value="720">12 小时</option>
+                            <option value="1440">1 天</option>
+                            <option value="4320">3 天</option>
+                            <option value="10080" selected>7 天</option>
+                            <option value="20160">14 天</option>
+                            <option value="43200">30 天</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="generateKeys()"><i class="fas fa-plus"></i> 生成</button>
+                    <button class="btn btn-danger" onclick="cleanupExpired()"><i class="fas fa-trash"></i> 清理过期</button>
+                </div>
+            </div>
+            <div id="keysList">
+                <div class="empty-state"><i class="fas fa-key"></i> 暂无密钥记录</div>
+            </div>
+        </div>
+
+        <!-- 积分密钥页面 -->
+        <div id="redeem-codesPage" class="page">
+            <div class="page-header">
+                <h2><i class="fas fa-ticket-alt"></i> 积分密钥管理</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showCreateRedeemCodeModal()"><i class="fas fa-plus"></i> 创建密钥</button>
+                    <button class="btn btn-outline" onclick="loadRedeemCodes()"><i class="fas fa-sync-alt"></i> 刷新</button>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statRedeemTotal">-</div>
+                    <div class="stat-label">总密钥数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statRedeemActive" style="color: #10b981;">-</div>
+                    <div class="stat-label">可用</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statRedeemUsed" style="color: #f59e0b;">-</div>
+                    <div class="stat-label">已使用</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statRedeemExpired" style="color: #ef4444;">-</div>
+                    <div class="stat-label">已过期</div>
+                </div>
+            </div>
+            <div id="redeemCodesList">
+                <div class="empty-state"><i class="fas fa-ticket-alt"></i> 暂无积分密钥</div>
+            </div>
+        </div>
+
+        <!-- 账号创建页面 -->
+        <div id="signupPage" class="page">
+            <div class="page-header">
+                <h2><i class="fas fa-user-plus"></i> 账号创建</h2>
+            </div>
+            <div style="max-width: 500px; margin: 0 auto;">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 style="margin-bottom: 24px;">创建新用户</h3>
+                        <form id="signupForm">
+                            <div class="form-group">
+                                <label>用户名 <span style="color:red">*</span></label>
+                                <input type="text" id="signupUsername" placeholder="请输入用户名" required>
+                            </div>
+                            <div class="form-group">
+                                <label>密码 <span style="color:red">*</span></label>
+                                <input type="password" id="signupPassword" placeholder="请输入密码（至少6位）" required>
+                                <button type="button" class="btn btn-sm" style="margin-top: 8px;" onclick="togglePassword('signupPassword')">显示密码</button>
+                            </div>
+                            <div class="form-group">
+                                <label>初始积分</label>
+                                <input type="number" id="signupInitialPoints" placeholder="新用户初始积分（默认0）" min="0" value="0">
+                            </div>
+                            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                                <button type="button" class="btn" onclick="resetSignupForm()">重置</button>
+                                <button type="submit" class="btn btn-primary">创建账号</button>
+                            </div>
+                        </form>
+                        <div id="signupMessage" style="margin-top: 20px; padding: 12px; border-radius: 4px; display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIP Token 管理页面 -->
+        <div id="vip-tokensPage" class="page">
+            <div class="page-header">
+                <h2><i class="fas fa-key"></i> VIP Token 管理</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="openAddVipTokenModal()"><i class="fas fa-plus"></i> 添加 Token</button>
+                    <button class="btn btn-outline" onclick="loadVipTokens()"><i class="fas fa-sync-alt"></i> 刷新</button>
+                </div>
+            </div>
+            <div id="vipTokensContainer">
+                <div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> 加载中...</div>
+            </div>
+        </div>
+
+        <!-- 数据清理页面 -->
+        <div id="data-clearPage" class="page">
+            <div class="page-header">
+                <h2><i class="fas fa-trash-alt"></i> 数据清理</h2>
+                <div style="color: #ef4444; font-size: 14px; font-weight: 500;">
+                    <i class="fas fa-exclamation-triangle"></i> 警告：以下操作将永久删除数据，无法恢复！
+                </div>
+            </div>
+            <div style="max-width: 800px;">
+                <div class="card" style="background: #fffbeb; border-color: #fcd34d;">
+                    <div class="card-body">
+                        <h3 style="color: #92400e;"><i class="fas fa-users"></i> 用户数据</h3>
+                        <p style="color: #78716c; margin: 12px 0;">清除所有用户会话（保留管理员账号），强制所有用户重新登录。</p>
+                        <button class="btn btn-danger" onclick="clearAllUsers()">
+                            <i class="fas fa-trash"></i> 清除用户会话
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card" style="background: #fef3c7; border-color: #fbbf24;">
+                    <div class="card-body">
+                        <h3 style="color: #b45309;"><i class="fas fa-bullhorn"></i> 公告数据</h3>
+                        <p style="color: #78716c; margin: 12px 0;">删除所有公告内容。</p>
+                        <button class="btn btn-danger" onclick="clearAnnouncements()">
+                            <i class="fas fa-trash"></i> 清除公告
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card" style="background: #eff6ff; border-color: #60a5fa;">
+                    <div class="card-body">
+                        <h3 style="color: #1d4ed8;"><i class="fas fa-key"></i> 注册密钥</h3>
+                        <p style="color: #78716c; margin: 12px 0;">删除所有注册密钥（包括已使用和未使用的）。</p>
+                        <button class="btn btn-danger" onclick="clearRegistrationKeys()">
+                            <i class="fas fa-trash"></i> 清除注册密钥
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card" style="background: #f0fdf4; border-color: #4ade80;">
+                    <div class="card-body">
+                        <h3 style="color: #166534;"><i class="fas fa-ticket-alt"></i> 积分密钥</h3>
+                        <p style="color: #78716c; margin: 12px 0;">删除所有积分密钥及其使用记录。</p>
+                        <button class="btn btn-danger" onclick="clearRedeemCodes()">
+                            <i class="fas fa-trash"></i> 清除积分密钥
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card" style="background: #fdf4ff; border-color: #c4b5fd;">
+                    <div class="card-body">
+                        <h3 style="color: #6d28d9;"><i class="fas fa-key"></i> VIP Token</h3>
+                        <p style="color: #78716c; margin: 12px 0;">删除所有 VIP Token 及其调用历史记录。</p>
+                        <button class="btn btn-danger" onclick="clearVipTokens()">
+                            <i class="fas fa-trash"></i> 清除 VIP Token
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card" style="background: #fee2e2; border-color: #f87171;">
+                    <div class="card-body">
+                        <h3 style="color: #991b1b;"><i class="fas fa-user-crown"></i> 会员 Token</h3>
+                        <p style="color: #78716c; margin: 12px 0;">删除所有会员 Token（包括公共会员 Token）。</p>
+                        <button class="btn btn-danger" onclick="clearMemberTokens()">
+                            <i class="fas fa-trash"></i> 清除会员 Token
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<!-- 编辑用户模态框 -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal">
+        <h3 id="editModalTitle">编辑用户</h3>
+        <form id="editUserForm">
+            <input type="hidden" id="editUserId">
+            <div class="form-group">
+                <label>用户名</label>
+                <input type="text" id="editUsername" required>
+            </div>
+            <div class="form-group">
+                <label>头像 URL</label>
+                <input type="text" id="editAvatar">
+            </div>
+            <div class="form-group">
+                <label><input type="checkbox" id="editIsAdmin"> 设为管理员</label>
+            </div>
+            <div class="form-group">
+                <label>重置密码（留空则不修改）</label>
+                <div style="position: relative;">
+                    <input type="text" id="editNewPassword" placeholder="新密码">
+                    <button type="button" onclick="togglePassword('editNewPassword')" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer;">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                <button type="button" class="btn" onclick="closeEditModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 播放记录模态框 -->
+<div class="modal-overlay" id="playHistoryModal">
+    <div class="modal modal-large">
+        <h3 id="playHistoryModalTitle">播放记录</h3>
+        <div id="playHistoryContent" style="max-height: 500px; overflow-y: auto; margin-bottom: 20px;"></div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="btn" onclick="closePlayHistoryModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 积分记录模态框 -->
+<div class="modal-overlay" id="pointsModal">
+    <div class="modal modal-large">
+        <h3 id="pointsModalTitle">积分记录</h3>
+        <div id="pointsContent" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px;"></div>
+        <div style="margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 12px;">
+            <h4>添加积分记录</h4>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display: block; margin-bottom: 6px; font-weight: 500;">积分变动</label>
+                    <input type="number" id="addPointsAmount" placeholder="正数增加，负数减少" style="padding: 8px;">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display: block; margin-bottom: 6px; font-weight: 500;">原因</label>
+                    <input type="text" id="addPointsReason" placeholder="积分变动原因" style="padding: 8px;">
+                </div>
+                <div style="flex: 1; min-width: 150px; align-self: flex-end;">
+                    <button class="btn btn-primary" onclick="addPoints()" style="width: 100%;">添加记录</button>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="btn" onclick="closePointsModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 用户设置模态框 -->
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal modal-large">
+        <h3 id="settingsModalTitle">用户设置</h3>
+        <div id="settingsContent" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;"></div>
+        <div style="margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 12px;">
+            <h4>编辑设置</h4>
+            <div style="margin-bottom: 12px;">
+                <label style="display: block; margin-bottom: 6px; font-weight: 500;">设置 JSON</label>
+                <textarea id="editSettingsJson" style="height: 120px; font-family: 'Courier New', monospace;"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="saveSettings()" style="width: 100%;">保存设置</button>
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="btn" onclick="closeSettingsModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 会员管理模态框 -->
+<div class="modal-overlay" id="membershipModal">
+    <div class="modal">
+        <h3 id="membershipModalTitle">会员管理</h3>
+        <input type="hidden" id="membershipUserId">
+        <input type="hidden" id="membershipDays">
+        <div id="membershipInfo" style="margin-bottom: 20px; padding: 16px; background: #fef3c7; border-radius: 12px;">
+            <p><strong>当前状态：</strong><span id="currentMembershipStatus">未查询</span></p>
+        </div>
+        <div class="form-group">
+            <label>设置会员期限</label>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
+                <button type="button" class="btn btn-outline" onclick="setMembershipDays(7)">7天</button>
+                <button type="button" class="btn btn-outline" onclick="setMembershipDays(30)">30天</button>
+                <button type="button" class="btn btn-outline" onclick="setMembershipDays(90)">90天</button>
+                <button type="button" class="btn btn-outline" onclick="setMembershipDays(365)">365天</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <input type="checkbox" id="membershipPermanent" onchange="togglePermanent()">
+                <label for="membershipPermanent">永久会员</label>
+            </div>
+            <input type="number" id="membershipCustomDays" placeholder="自定义天数" style="display: none; margin-top: 12px;">
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="btn" onclick="closeMembershipModal()">关闭</button>
+            <button class="btn btn-primary" onclick="saveMembership()">保存设置</button>
+        </div>
+    </div>
+</div>
+
+<!-- 公告编辑模态框 -->
+<div class="modal-overlay" id="announcementModal">
+    <div class="modal">
+        <h3 id="announcementModalTitle">新建公告</h3>
+        <form id="announcementForm">
+            <div class="form-group">
+                <label>标题 <span style="color:red">*</span></label>
+                <input type="text" id="annTitle" required placeholder="例如：系统维护通知">
+                <div class="icon-picker" id="titleIconPicker" style="margin-top: 8px;">
+                    <button type="button" class="icon-option" data-icon="music"><i class="fas fa-music"></i></button>
+                    <button type="button" class="icon-option" data-icon="star"><i class="fas fa-star"></i></button>
+                    <button type="button" class="icon-option" data-icon="heart"><i class="fas fa-heart"></i></button>
+                    <button type="button" class="icon-option" data-icon="fire"><i class="fas fa-fire"></i></button>
+                    <button type="button" class="icon-option" data-icon="bell"><i class="fas fa-bell"></i></button>
+                    <button type="button" class="icon-option" data-icon="crown"><i class="fas fa-crown"></i></button>
+                    <button type="button" class="icon-option" data-icon="gift"><i class="fas fa-gift"></i></button>
+                    <button type="button" class="icon-option" data-icon="bug"><i class="fas fa-bug"></i></button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>图标</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="text" id="annIcon" placeholder="例如：fa-music" value="fa-bullhorn">
+                    <div style="width: 36px; height: 36px; background: #f1f5f9; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-bullhorn" id="iconPreview"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>排序序号</label>
+                <input type="number" id="annSortOrder" value="0" style="width: 100px;">
+            </div>
+            <div class="form-group">
+                <label>内容</label>
+                <textarea id="annContent" placeholder="详细内容...支持换行"></textarea>
+            </div>
+            <div class="form-group">
+                <label>显示时间</label>
+                <input type="datetime-local" id="annDisplayTime">
+            </div>
+            <div class="form-group">
+                <label>状态</label>
+                <select id="annActive">
+                    <option value="true">启用</option>
+                    <option value="false">禁用</option>
+                </select>
+            </div>
+            <input type="hidden" id="editAnnId" value="">
+            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                <button type="button" class="btn" onclick="closeAnnouncementModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 积分密钥创建模态框 -->
+<div class="modal-overlay" id="redeemCodeModal">
+    <div class="modal">
+        <h3 id="redeemCodeModalTitle">创建积分密钥</h3>
+        <form id="redeemCodeForm">
+            <div class="form-group">
+                <label>积分类型 <span style="color:red">*</span></label>
+                <select id="redeemPointType" required>
+                    <option value="normal">普通积分</option>
+                    <option value="vip">会员积分</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>积分数量 <span style="color:red">*</span></label>
+                <input type="number" id="redeemPoints" required min="1" placeholder="输入积分数量">
+            </div>
+            <div class="form-group">
+                <label>使用次数（留空为1次）</label>
+                <input type="number" id="redeemMaxUses" value="1" min="1">
+            </div>
+            <div class="form-group">
+                <label>有效期（选填）</label>
+                <input type="datetime-local" id="redeemExpireTime">
+            </div>
+            <input type="hidden" id="editRedeemCodeId" value="">
+            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                <button type="button" class="btn" onclick="closeRedeemCodeModal()">取消</button>
+                <button type="submit" class="btn btn-primary">创建</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 积分密钥使用记录模态框 -->
+<div class="modal-overlay" id="redeemCodeUsesModal">
+    <div class="modal modal-large">
+        <h3 id="redeemCodeUsesModalTitle">密钥使用记录</h3>
+        <div id="redeemCodeUsesContent" style="max-height: 500px; overflow-y: auto; margin-bottom: 20px;"></div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button class="btn" onclick="closeRedeemCodeUsesModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 添加 VIP Token 模态框 -->
+<div class="modal-overlay" id="addVipTokenModal">
+    <div class="modal">
+        <h3><i class="fas fa-plus"></i> 添加 VIP Token</h3>
+        <div class="form-group">
+            <label>Token（明文）</label>
+            <input type="text" id="newVipToken" placeholder="请输入云智 API Token" style="width:100%;">
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+            <button class="btn" onclick="closeAddVipTokenModal()">取消</button>
+            <button class="btn btn-primary" onclick="addVipToken()">保存</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    var SUPABASE_URL = "https://yeogthpysbqgehjkayaf.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_WoO50Mbz0Rhfy0nPugE3vA_5UP__SYX";
+    var supabase;
+    var sessionToken = null;
+    var currentUser = null;
+    var currentAnnouncementEditId = null;
+
+    function initSupabase() {
+        if (!supabase || typeof supabase.from !== 'function') {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                auth: { persistSession: false, autoRefreshToken: false }
+            });
+        }
+        return supabase;
+    }
+
+    async function rpcCall(name, params) {
+        if (typeof supabase?.rpc === 'function') {
+            try {
+                const { data, error } = await supabase.rpc(name, params);
+                return { data, error };
+            } catch (e) {
+                return { data: null, error: e };
+            }
+        }
+        const url = `${SUPABASE_URL}/rest/v1/rpc/${name}?apikey=${SUPABASE_ANON_KEY}`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params)
+        });
+        const data = await response.json();
+        return { data, error: !response.ok ? new Error(data.message || 'Request failed') : null };
+    }
+
+    function showToast(msg, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.style.background = isError ? '#dc2626' : '#1e293b';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function adminSaveUser(data) {
+        const adminInfo = {
+            id: data.id,
+            username: data.username,
+            avatar: data.avatar || ''
+        };
+        localStorage.setItem('adminUser', JSON.stringify(adminInfo));
+        localStorage.setItem('adminSession', data.sessionToken);
+    }
+    
+    function adminClearUser() {
+        localStorage.removeItem('adminUser');
+        localStorage.removeItem('adminSession');
+    }
+
+    function switchPage(pageName) {
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.page === pageName);
+        });
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.toggle('active', page.id === pageName + 'Page');
+        });
+        
+        if (pageName === 'announcements') {
+            loadAnnouncements();
+        } else if (pageName === 'keys') {
+            loadAllData();
+        } else if (pageName === 'redeem-codes') {
+            loadRedeemCodes();
+        } else if (pageName === 'signup') {
+            resetSignupForm();
+        } else if (pageName === 'vip-tokens') {
+            loadVipTokens();
+        }
+    }
+
+    async function clearAllUsers() {
+        if (!confirm('确定要清除所有用户会话吗？这将强制所有用户重新登录！')) return;
+        try {
+            const { data, error } = await rpcCall('admin_clear_all_users', {
+                _session_token: sessionToken
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            showToast(`已清除 ${data.deleted_sessions} 个用户会话`, false);
+        } catch (e) {
+            showToast('清除失败: ' + e.message, true);
+        }
+    }
+
+    async function clearAnnouncements() {
+        if (!confirm('确定要清除所有公告吗？此操作无法撤销！')) return;
+        try {
+            const { data, error } = await rpcCall('admin_clear_announcements', {
+                _session_token: sessionToken
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            showToast(`已清除 ${data.deleted_count} 条公告`, false);
+        } catch (e) {
+            showToast('清除失败: ' + e.message, true);
+        }
+    }
+
+    async function clearRegistrationKeys() {
+        if (!confirm('确定要清除所有注册密钥吗？此操作无法撤销！')) return;
+        try {
+            const { data, error } = await rpcCall('admin_clear_registration_keys', {
+                _session_token: sessionToken
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            showToast(`已清除 ${data.deleted_count} 个注册密钥`, false);
+        } catch (e) {
+            showToast('清除失败: ' + e.message, true);
+        }
+    }
+
+    async function clearRedeemCodes() {
+        if (!confirm('确定要清除所有积分密钥吗？此操作无法撤销！')) return;
+        try {
+            const { data, error } = await rpcCall('admin_clear_redeem_codes', {
+                _session_token: sessionToken
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            showToast(`已清除 ${data.deleted_count} 个积分密钥`, false);
+        } catch (e) {
+            showToast('清除失败: ' + e.message, true);
+        }
+    }
+
+    async function clearVipTokens() {
+        if (!confirm('确定要清除所有 VIP Token 吗？此操作无法撤销！')) return;
+        try {
+            const { data, error } = await rpcCall('admin_clear_vip_tokens', {
+                _session_token: sessionToken
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            showToast(`已清除 ${data.deleted_count} 个 VIP Token`, false);
+        } catch (e) {
+            showToast('清除失败: ' + e.message, true);
+        }
+    }
+
+    async function clearMemberTokens() {
+        if (!confirm('确定要清除所有会员 Token 吗？此操作无法撤销！')) return;
+        try {
+            const { data, error } = await rpcCall('admin_clear_member_tokens', {
+                _session_token: sessionToken
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            showToast(`已清除 ${data.deleted_count} 个会员 Token`, false);
+        } catch (e) {
+            showToast('清除失败: ' + e.message, true);
+        }
+    }
+
+    function openAddVipTokenModal() {
+        document.getElementById('newVipToken').value = '';
+        document.getElementById('addVipTokenModal').classList.add('active');
+    }
+
+    function closeAddVipTokenModal() {
+        document.getElementById('addVipTokenModal').classList.remove('active');
+    }
+
+    async function addVipToken() {
+        const token = document.getElementById('newVipToken').value.trim();
+        if (!token) {
+            showToast('Token 不能为空', true);
+            return;
+        }
+
+        try {
+            const { data, error } = await rpcCall('admin_add_vip_token', {
+                _session_token: sessionToken,
+                _token: token
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+
+            showToast('VIP Token 已添加');
+            closeAddVipTokenModal();
+            loadVipTokens();
+        } catch (e) {
+            showToast('添加失败: ' + e.message, true);
+        }
+    }
+
+    async function deleteVipToken(tokenId) {
+        if (!confirm('确定要删除此 VIP Token 吗？')) return;
+        try {
+            const { data, error } = await rpcCall('admin_delete_vip_token', {
+                _session_token: sessionToken,
+                _token_id: tokenId
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            showToast('VIP Token 已删除');
+            loadVipTokens();
+        } catch (e) {
+            showToast('删除失败: ' + e.message, true);
+        }
+    }
+
+    async function loadVipTokens() {
+        const container = document.getElementById('vipTokensContainer');
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> 加载中...</div>';
+
+        try {
+            const { data, error } = await rpcCall('admin_list_vip_tokens', {
+                _session_token: sessionToken
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+
+            const tokens = data.tokens || [];
+            if (tokens.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-key"></i> 暂无 VIP Token</div>';
+                return;
+            }
+
+            container.innerHTML = tokens.map(t => {
+                const historyHtml = (t.history || []).map(h => `
+                    <tr>
+                        <td>${escapeHtml(h.username)}</td>
+                        <td>${h.call_count}</td>
+                        <td>${h.last_call_at ? new Date(h.last_call_at).toLocaleString() : '-'}</td>
+                    </tr>
+                `).join('');
+
+                return `
+                <div class="card">
+                    <div class="card-body">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <code>${escapeHtml(t.token)}</code>
+                            </div>
+                            <span style="font-size:12px; color:#64748b;">
+                                创建人：${escapeHtml(t.created_by || '未知')} · ${new Date(t.created_at).toLocaleString()}
+                            </span>
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <strong>调用记录：</strong>
+                            ${historyHtml ? `
+                            <table style="margin-top: 8px;">
+                                <thead><tr><th>用户</th><th>调用次数</th><th>最后调用</th></tr></thead>
+                                <tbody>${historyHtml}</tbody>
+                            </table>` : '<p style="color:#64748b;">暂无调用记录</p>'}
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn btn-sm btn-danger" onclick="deleteVipToken(${t.id})"><i class="fas fa-trash"></i> 删除</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        } catch (e) {
+            container.innerHTML = `<div class="empty-state" style="color:#ef4444;">加载失败: ${e.message}</div>`;
+        }
+    }
+
+    async function adminLogin() {
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const errorEl = document.getElementById('loginError');
+        if (!username || !password) {
+            errorEl.textContent = '请输入用户名和密码';
+            return;
+        }
+        try {
+            initSupabase();
+            const { data, error } = await rpcCall('verify_vip_user', {
+                _username: username,
+                _password: password
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            if (!data.is_admin) throw new Error('非管理员账号，无法访问后台');
+            
+            sessionToken = data.session_token;
+            currentUser = { id: data.user_id, username: data.username, avatar: data.avatar_url, isAdmin: true };
+            adminSaveUser({ id: data.user_id, username: data.username, avatar: data.avatar_url, sessionToken: data.session_token });
+            
+            document.getElementById('loginPanel').classList.remove('active');
+            document.getElementById('loginPanel').style.display = 'none';
+            document.getElementById('sidebar').style.display = 'flex';
+            document.getElementById('sidebarUsername').textContent = currentUser.username;
+            switchPage('users');
+            await refreshUserList();
+            showToast('登录成功');
+        } catch (e) {
+            errorEl.textContent = e.message;
+        }
+    }
+
+    function adminLogout() {
+        sessionToken = null;
+        currentUser = null;
+        adminClearUser();
+        document.getElementById('sidebar').style.display = 'none';
+        document.getElementById('loginPanel').style.display = 'flex';
+        document.getElementById('loginPanel').classList.add('active');
+        document.getElementById('loginUsername').value = '';
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('loginError').textContent = '';
+    }
+
+    async function refreshUserList() {
+        const tbody = document.getElementById('userTableBody');
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;"><span class="loading-spinner"></span> 加载用户列表...</td></tr>';
+        try {
+            const { data, error } = await rpcCall('admin_list_users', { _session_token: sessionToken });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            
+            const users = data.users || [];
+            document.getElementById('totalUsersDisplay').textContent = `共 ${users.length} 位用户`;
+            
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;">暂无用户</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = users.map(u => {
+                const isAdmin = u.is_admin ? '<span class="badge badge-admin"><i class="fas fa-crown"></i> 管理员</span>' 
+                                          : '<span class="badge badge-user">普通用户</span>';
+                const isBanned = u.is_banned ? '<span class="badge badge-banned"><i class="fas fa-ban"></i> 已封禁</span>' 
+                                            : '<span class="badge badge-active"><i class="fas fa-check"></i> 正常</span>';
+                const membership = u.is_member ? (u.is_permanent ? '<span class="badge badge-vip-permanent"><i class="fas fa-star"></i> 永久会员</span>' : `<span class="badge badge-vip"><i class="fas fa-star"></i> 会员 (${u.days_remaining}天)</span>`) : '<span class="badge badge-non-vip">-</span>';
+                const playTime = formatDuration(u.total_play_time || 0);
+                const avatarHtml = u.avatar_url 
+                    ? `<img src="${u.avatar_url}" class="user-avatar" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\'%3E%3Cpath fill=\'%23999\' d=\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\'/%3E%3C/svg%3E'">`
+                    : '<i class="fas fa-user-circle" style="font-size:32px;color:#94a3b8;"></i>';
+                const banBtn = u.is_admin ? '' : `<button class="btn btn-sm ${u.is_banned ? 'btn-success' : 'btn-warning'}" onclick="toggleBanUser('${u.id}', '${escapeHtml(u.username)}', ${u.is_banned})"><i class="fas ${u.is_banned ? 'fa-unlock' : 'fa-lock'}"></i></button>`;
+                return `<tr>
+                    <td style="display:flex;align-items:center;gap:10px;">${avatarHtml}<span>${escapeHtml(u.username)}</span></td>
+                    <td><code style="font-size:12px;">${u.id?.substring(0,8)}...</code></td>
+                    <td>${isAdmin}</td>
+                    <td>${isBanned}</td>
+                    <td>${membership}</td>
+                    <td>${u.login_count || 0}</td>
+                    <td>${u.total_points || 0}</td>
+                    <td>${u.total_plays || 0}</td>
+                    <td>${playTime}</td>
+                    <td>${formatDate(u.created_at)}</td>
+                    <td class="actions">
+                        <button class="btn btn-sm" onclick="openEditModal('${u.id}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm" onclick="openPlayHistoryModal('${u.id}', '${escapeHtml(u.username)}')"><i class="fas fa-music"></i></button>
+                        <button class="btn btn-sm" onclick="openPointsModal('${u.id}', '${escapeHtml(u.username)}')"><i class="fas fa-coins"></i></button>
+                        <button class="btn btn-sm btn-vip" onclick="openMembershipModal('${u.id}', '${escapeHtml(u.username)}')"><i class="fas fa-crown"></i></button>
+                        <button class="btn btn-sm" onclick="openSettingsModal('${u.id}', '${escapeHtml(u.username)}')"><i class="fas fa-cog"></i></button>
+                        ${banBtn}
+                        <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}','${escapeHtml(u.username)}')"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
+        } catch (e) {
+            if (e.message.includes('SESSION_EXPIRED') || e.message.includes('FORBIDDEN')) {
+                adminLogout();
+                showToast('会话过期或无权限，请重新登录', true);
+            } else {
+                tbody.innerHTML = `<tr><td colspan="11" style="color:red;">加载失败: ${e.message}</td></tr>`;
+            }
+        }
+    }
+
+    function formatDuration(ms) {
+        if (!ms) return '0秒';
+        const sec = Math.floor(ms/1000);
+        const h = Math.floor(sec/3600);
+        const m = Math.floor((sec%3600)/60);
+        const s = sec%60;
+        return h>0 ? `${h}h ${m}m` : `${m}m ${s}s`;
+    }
+
+    function formatDate(iso) {
+        if (!iso) return '-';
+        const d = new Date(iso);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return String(text).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    }
+
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = input.nextElementSibling?.querySelector('i');
+        if (!icon) return;
+        if (input.type === 'text') {
+            input.type = 'password';
+            icon.className = 'fas fa-eye';
+        } else {
+            input.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+        }
+    }
+
+    let currentEditUserId = null;
+    function openEditModal(userId) {
+        currentEditUserId = userId;
+        const row = event.target.closest('tr');
+        const cells = row.cells;
+        const username = cells[0].querySelector('span')?.textContent || '';
+        const isAdmin = cells[2].textContent.includes('管理员');
+        document.getElementById('editUserId').value = userId;
+        document.getElementById('editUsername').value = username;
+        document.getElementById('editAvatar').value = '';
+        document.getElementById('editIsAdmin').checked = isAdmin;
+        document.getElementById('editNewPassword').value = '';
+        document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('active');
+        currentEditUserId = null;
+    }
+
+    document.getElementById('editUserForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userId = document.getElementById('editUserId').value;
+        const username = document.getElementById('editUsername').value.trim();
+        const avatar = document.getElementById('editAvatar').value.trim();
+        const isAdmin = document.getElementById('editIsAdmin').checked;
+        const newPassword = document.getElementById('editNewPassword').value.trim();
+        
+        const updates = { username, avatar_url: avatar || null, is_admin: isAdmin };
+        try {
+            const { data, error } = await rpcCall('admin_update_user', {
+                _session_token: sessionToken,
+                _user_id: userId,
+                _updates: updates
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            
+            if (newPassword) {
+                const { error: pwdErr } = await rpcCall('admin_reset_password', {
+                    _session_token: sessionToken,
+                    _user_id: userId,
+                    _new_password: newPassword
+                });
+                if (pwdErr) throw pwdErr;
+            }
+            showToast('用户信息已更新');
+            closeEditModal();
+            refreshUserList();
+        } catch (err) {
+            showToast('更新失败: ' + err.message, true);
+        }
+    });
+
+    async function deleteUser(userId, username) {
+        if (!confirm(`确定要永久删除用户 "${username}" 吗？此操作不可逆。`)) return;
+        try {
+            const { data, error } = await rpcCall('admin_delete_user', {
+                _session_token: sessionToken,
+                _user_id: userId
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            showToast('用户已删除');
+            refreshUserList();
+        } catch (e) {
+            showToast('删除失败: ' + e.message, true);
+        }
+    }
+
+    async function toggleBanUser(userId, username, isBanned) {
+        const action = isBanned ? '解封' : '封禁';
+        if (!confirm(`确定要${action}用户 "${username}" 吗？${isBanned ? '解封后用户可以重新登录。' : '封禁后用户将无法登录。'}`)) return;
+        try {
+            const { data, error } = await rpcCall('admin_toggle_ban_user', {
+                _session_token: sessionToken,
+                _user_id: userId,
+                _is_banned: !isBanned
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            showToast(`用户已${action}`);
+            refreshUserList();
+        } catch (e) {
+            showToast(`${action}失败: ` + e.message, true);
+        }
+    }
+
+    async function openPlayHistoryModal(userId, username) {
+        const modal = document.getElementById('playHistoryModal');
+        const title = document.getElementById('playHistoryModalTitle');
+        const content = document.getElementById('playHistoryContent');
+        
+        title.textContent = `播放记录 - ${username}`;
+        content.innerHTML = '<span class="loading-spinner"></span> 加载中...';
+        modal.classList.add('active');
+        
+        try {
+            const { data, error } = await rpcCall('admin_get_user_play_history', {
+                _session_token: sessionToken,
+                _user_id: userId
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            
+            const playHistory = data.play_history || [];
+            const searchHistory = data.search_history || [];
+            
+            content.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h4>总播放次数: ${data.total_plays || 0}</h4>
+                    <h4>总播放时长: ${formatDuration(data.total_play_time || 0)}</h4>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <h4>播放历史</h4>
+                    ${playHistory.length > 0 ? 
+                        `<ul style="list-style: none; padding: 0;">${playHistory.map(item => 
+                            `<li style="padding: 8px; border-bottom: 1px solid #e2e8f0;">
+                                <div><strong>${escapeHtml(item.name || '未知')}</strong> - ${escapeHtml(item.artist || '未知')}</div>
+                                <div style="font-size: 12px; color: #64748b;">${item.platform || '未知'} · ${item.playedAt ? new Date(item.playedAt).toLocaleString() : '未知时间'}</div>
+                            </li>`
+                        ).join('')}</ul>` 
+                        : '<p>暂无播放记录</p>'
+                    }
+                </div>
+                <div>
+                    <h4>搜索历史</h4>
+                    ${searchHistory.length > 0 ? 
+                        `<ul style="list-style: none; padding: 0;">${searchHistory.map(item => 
+                            `<li style="padding: 8px; border-bottom: 1px solid #e2e8f0;">${escapeHtml(item)}</li>`
+                        ).join('')}</ul>` 
+                        : '<p>暂无搜索记录</p>'
+                    }
+                </div>
+            `;
+        } catch (e) {
+            content.innerHTML = `<div style="color: #ef4444;">加载失败: ${e.message}</div>`;
+        }
+    }
+
+    function closePlayHistoryModal() {
+        document.getElementById('playHistoryModal').classList.remove('active');
+    }
+
+    let currentPointsUserId = null;
+    async function openPointsModal(userId, username) {
+        currentPointsUserId = userId;
+        const modal = document.getElementById('pointsModal');
+        const title = document.getElementById('pointsModalTitle');
+        const content = document.getElementById('pointsContent');
+        
+        title.textContent = `积分记录 - ${username}`;
+        content.innerHTML = '<span class="loading-spinner"></span> 加载中...';
+        modal.classList.add('active');
+        
+        try {
+            const { data, error } = await rpcCall('admin_get_user_points', {
+                _session_token: sessionToken,
+                _user_id: userId
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            
+            const pointHistory = (data.point_history || []).sort((a, b) => {
+                const dateA = new Date(a.created_at || 0);
+                const dateB = new Date(b.created_at || 0);
+                return dateB - dateA;
+            });
+            
+            content.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h4>总积分: ${data.total_points || 0}</h4>
+                </div>
+                <div>
+                    <h4>积分历史</h4>
+                    ${pointHistory.length > 0 ? 
+                        `<ul style="list-style: none; padding: 0;">${pointHistory.map(item => 
+                            `<li style="padding: 8px; border-bottom: 1px solid #e2e8f0;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span><strong>${escapeHtml(item.reason || '未知原因')}</strong></span>
+                                    <span style="color: ${(item.points || 0) >= 0 ? '#10b981' : '#ef4444'};">
+                                        ${(item.points || 0) >= 0 ? '+' : ''}${item.points || 0}
+                                    </span>
+                                </div>
+                                <div style="font-size: 12px; color: #64748b;">
+                                    ${item.created_at ? new Date(item.created_at).toLocaleString() : '未知时间'}
+                                    ${item.song_id ? ` · 歌曲ID: ${item.song_id}` : ''}
+                                </div>
+                            </li>`
+                        ).join('')}</ul>` 
+                        : '<p>暂无积分记录</p>'
+                    }
+                </div>
+            `;
+        } catch (e) {
+            content.innerHTML = `<div style="color: #ef4444;">加载失败: ${e.message}</div>`;
+        }
+    }
+
+    async function addPoints() {
+        if (!currentPointsUserId) {
+            showToast('用户ID不存在', true);
+            return;
+        }
+        
+        const amount = parseInt(document.getElementById('addPointsAmount').value);
+        const reason = document.getElementById('addPointsReason').value.trim();
+        
+        if (isNaN(amount)) {
+            showToast('请输入有效的积分变动值', true);
+            return;
+        }
+        
+        if (!reason) {
+            showToast('请输入积分变动原因', true);
+            return;
+        }
+        
+        try {
+            const { data, error } = await rpcCall('admin_add_user_points', {
+                _session_token: sessionToken,
+                _user_id: currentPointsUserId,
+                _points: amount,
+                _reason: reason
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            
+            showToast('积分记录已添加');
+            const modalTitle = document.getElementById('pointsModalTitle').textContent;
+            const username = modalTitle.replace('积分记录 - ', '');
+            openPointsModal(currentPointsUserId, username);
+            document.getElementById('addPointsAmount').value = '';
+            document.getElementById('addPointsReason').value = '';
+        } catch (e) {
+            showToast('添加失败: ' + e.message, true);
+        }
+    }
+
+    function closePointsModal() {
+        document.getElementById('pointsModal').classList.remove('active');
+        currentPointsUserId = null;
+        document.getElementById('addPointsAmount').value = '';
+        document.getElementById('addPointsReason').value = '';
+    }
+
+    let currentSettingsUserId = null;
+    async function openSettingsModal(userId, username) {
+        currentSettingsUserId = userId;
+        const modal = document.getElementById('settingsModal');
+        const title = document.getElementById('settingsModalTitle');
+        const content = document.getElementById('settingsContent');
+        const jsonTextarea = document.getElementById('editSettingsJson');
+        
+        title.textContent = `用户设置 - ${username}`;
+        content.innerHTML = '<span class="loading-spinner"></span> 加载中...';
+        modal.classList.add('active');
+        
+        try {
+            const { data, error } = await rpcCall('admin_get_user_settings', {
+                _session_token: sessionToken,
+                _user_id: userId
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            
+            const settings = data.settings || {};
+            const settingsJson = JSON.stringify(settings, null, 2);
+            
+            content.innerHTML = `
+                <div style="padding: 10px; background: #f8fafc; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 14px;">
+                    ${escapeHtml(settingsJson)}
+                </div>
+            `;
+            
+            jsonTextarea.value = settingsJson;
+        } catch (e) {
+            content.innerHTML = `<div style="color: #ef4444;">加载失败: ${e.message}</div>`;
+            jsonTextarea.value = '{}';
+        }
+    }
+
+    async function saveSettings() {
+        if (!currentSettingsUserId) {
+            showToast('用户ID不存在', true);
+            return;
+        }
+        
+        const jsonText = document.getElementById('editSettingsJson').value.trim();
+        
+        try {
+            const settings = JSON.parse(jsonText);
+            
+            const { data, error } = await rpcCall('admin_update_user_settings', {
+                _session_token: sessionToken,
+                _user_id: currentSettingsUserId,
+                _settings: settings
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            
+            showToast('设置已保存');
+            const modalTitle = document.getElementById('settingsModalTitle').textContent;
+            const username = modalTitle.replace('用户设置 - ', '');
+            openSettingsModal(currentSettingsUserId, username);
+        } catch (e) {
+            showToast('保存失败: ' + e.message, true);
+        }
+    }
+
+    function closeSettingsModal() {
+        document.getElementById('settingsModal').classList.remove('active');
+        currentSettingsUserId = null;
+        document.getElementById('editSettingsJson').value = '';
+    }
+
+    let currentMembershipUserId = null;
+    
+    async function openMembershipModal(userId, username) {
+        currentMembershipUserId = userId;
+        const modal = document.getElementById('membershipModal');
+        const title = document.getElementById('membershipModalTitle');
+        const status = document.getElementById('currentMembershipStatus');
+        
+        title.textContent = `会员管理 - ${username}`;
+        status.textContent = '加载中...';
+        document.getElementById('membershipUserId').value = userId;
+        document.getElementById('membershipDays').value = '';
+        document.getElementById('membershipPermanent').checked = false;
+        document.getElementById('membershipCustomDays').style.display = 'none';
+        modal.classList.add('active');
+        
+        try {
+            const { data, error } = await rpcCall('check_membership_status', { _user_id: userId });
+            if (error) throw error;
+            
+            if (data.is_member) {
+                if (data.is_permanent) {
+                    status.innerHTML = '<span style="color: #f59e0b; font-weight: bold;">永久会员</span>';
+                } else {
+                    status.innerHTML = `<span style="color: #f59e0b; font-weight: bold;">会员</span> - 剩余 ${data.days_remaining} 天`;
+                }
+            } else {
+                status.innerHTML = '<span style="color: #6b7280;">非会员</span>';
+            }
+        } catch (e) {
+            status.textContent = '查询失败: ' + e.message;
+        }
+    }
+    
+    function closeMembershipModal() {
+        document.getElementById('membershipModal').classList.remove('active');
+        currentMembershipUserId = null;
+    }
+    
+    function setMembershipDays(days) {
+        document.getElementById('membershipDays').value = days;
+        document.getElementById('membershipPermanent').checked = false;
+        document.getElementById('membershipCustomDays').style.display = 'none';
+    }
+    
+    function togglePermanent() {
+        const permanent = document.getElementById('membershipPermanent').checked;
+        const customDays = document.getElementById('membershipCustomDays');
+        if (permanent) {
+            document.getElementById('membershipDays').value = '';
+            customDays.style.display = 'none';
+        } else {
+            customDays.style.display = 'block';
+        }
+    }
+    
+    async function saveMembership() {
+        const userId = document.getElementById('membershipUserId').value;
+        const permanent = document.getElementById('membershipPermanent').checked;
+        const daysInput = document.getElementById('membershipDays').value;
+        const customDays = document.getElementById('membershipCustomDays').value;
+        
+        let days = parseInt(daysInput) || parseInt(customDays) || 0;
+        
+        if (!permanent && (!days || days <= 0)) {
+            showToast('请选择会员天数或勾选永久会员', true);
+            return;
+        }
+        
+        try {
+            const { data, error } = await rpcCall('admin_set_membership', {
+                _session_token: sessionToken,
+                _user_id: userId,
+                _days: days,
+                _is_permanent: permanent
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            
+            showToast(permanent ? '已设置为永久会员' : `已添加 ${days} 天会员`, false);
+            closeMembershipModal();
+            refreshUserList();
+        } catch (e) {
+            showToast('设置失败: ' + e.message, true);
+        }
+    }
+
+    function openAnnouncementModal(id = null) {
+        currentAnnouncementEditId = id;
+        document.getElementById('announcementModalTitle').textContent = id ? '编辑公告' : '新建公告';
+        document.getElementById('annTitle').value = '';
+        document.getElementById('annIcon').value = 'fa-bullhorn';
+        document.getElementById('annContent').value = '';
+        document.getElementById('annDisplayTime').value = '';
+        document.getElementById('annActive').value = 'true';
+        document.getElementById('annSortOrder').value = '0';
+        document.getElementById('editAnnId').value = id || '';
+        updateIconPreview('fa-bullhorn');
+        document.getElementById('announcementModal').classList.add('active');
+    }
+
+    async function loadAnnouncementForEdit(id) {
+        initSupabase();
+        try {
+            let data;
+            let error;
+            
+            if (typeof supabase?.from === 'function') {
+                ({ data, error } = await supabase.from('announcements').select('*').eq('id', id).single());
+            } else {
+                const url = `${SUPABASE_URL}/rest/v1/announcements?apikey=${SUPABASE_ANON_KEY}&id=eq.${id}&select=*`;
+                const response = await fetch(url);
+                const result = await response.json();
+                data = result.length > 0 ? result[0] : null;
+                error = !response.ok ? new Error('Failed to fetch announcement') : null;
+            }
+            
+            if (error) throw error;
+            
+            currentAnnouncementEditId = data.id;
+            document.getElementById('announcementModalTitle').textContent = '编辑公告';
+            document.getElementById('annTitle').value = data.title || '';
+            document.getElementById('annIcon').value = data.icon || 'fa-bullhorn';
+            document.getElementById('annContent').value = data.content || '';
+            document.getElementById('annSortOrder').value = data.sort_order ?? 0;
+            document.getElementById('annActive').value = data.is_active ? 'true' : 'false';
+            document.getElementById('editAnnId').value = data.id;
+            
+            if (data.display_time) {
+                const d = new Date(data.display_time);
+                document.getElementById('annDisplayTime').value = d.toISOString().slice(0, 16);
+            } else {
+                document.getElementById('annDisplayTime').value = '';
+            }
+            
+            updateIconPreview(data.icon || 'fa-bullhorn');
+            document.getElementById('announcementModal').classList.add('active');
+        } catch (err) {
+            showToast('加载公告详情失败: ' + err.message, true);
+        }
+    }
+
+    function closeAnnouncementModal() {
+        document.getElementById('announcementModal').classList.remove('active');
+        currentAnnouncementEditId = null;
+    }
+
+    function updateIconPreview(iconClass) {
+        const previewIcon = document.getElementById('iconPreview');
+        if (previewIcon) {
+            previewIcon.className = iconClass ? `fas ${iconClass}` : 'fas fa-bullhorn';
+        }
+    }
+
+    async function loadAnnouncements() {
+        initSupabase();
+        const container = document.getElementById('announcementsContainer');
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> 加载中...</div>';
+        
+        try {
+            let data;
+            let error;
+            
+            if (typeof supabase?.from === 'function') {
+                ({ data, error } = await supabase
+                    .from('announcements')
+                    .select('*')
+                    .order('sort_order', { ascending: true, nullsFirst: false })
+                    .order('display_time', { ascending: false, nullsLast: true })
+                    .order('created_at', { ascending: false }));
+            } else {
+                const url = `${SUPABASE_URL}/rest/v1/announcements?apikey=${SUPABASE_ANON_KEY}&order=sort_order.asc.nullslast,display_time.desc.nullsfirst,created_at.desc`;
+                const response = await fetch(url);
+                data = await response.json();
+                error = !response.ok ? new Error('Failed to fetch announcements') : null;
+            }
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="far fa-newspaper"></i> 暂无公告</div>';
+                return;
+            }
+
+            container.innerHTML = data.map(item => {
+                const iconClass = item.icon && item.icon.trim() !== '' ? item.icon : 'fa-bullhorn';
+                const activeBadge = item.is_active 
+                    ? '<span class="badge badge-active">启用</span>' 
+                    : '<span class="badge badge-inactive">禁用</span>';
+                
+                let displayTimeStr = '';
+                if (item.display_time) {
+                    const d = new Date(item.display_time);
+                    displayTimeStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                }
+                
+                return `
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas ${iconClass}"></i>
+                                    ${escapeHtml(item.title)}
+                                    ${activeBadge}
+                                </div>
+                            </div>
+                            ${displayTimeStr ? `<div style="font-size: 13px; color: #64748b; margin-bottom: 8px;"><i class="far fa-calendar-alt"></i> ${displayTimeStr}</div>` : ''}
+                            ${item.content ? `<div class="card-content">${escapeHtml(item.content)}</div>` : ''}
+                            <div class="card-actions">
+                                <button class="btn btn-sm btn-outline" onclick="loadAnnouncementForEdit(${item.id})"><i class="fas fa-edit"></i> 编辑</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteAnnouncement(${item.id})"><i class="fas fa-trash"></i> 删除</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (err) {
+            container.innerHTML = `<div class="empty-state" style="color: #ef4444;"><i class="fas fa-exclamation-triangle"></i> 加载失败: ${err.message}</div>`;
+        }
+    }
+
+    async function deleteAnnouncement(id) {
+        if (!confirm('确定要删除此公告吗？')) return;
+        initSupabase();
+        
+        try {
+            let error;
+            
+            if (typeof supabase?.from === 'function') {
+                ({ error } = await supabase.from('announcements').delete().eq('id', id));
+            } else {
+                const url = `${SUPABASE_URL}/rest/v1/announcements?apikey=${SUPABASE_ANON_KEY}&id=eq.${id}`;
+                const response = await fetch(url, { method: 'DELETE' });
+                error = !response.ok ? new Error('Failed to delete announcement') : null;
+            }
+            
+            if (error) throw error;
+            showToast('公告已删除');
+            loadAnnouncements();
+        } catch (err) {
+            showToast('删除失败: ' + err.message, true);
+        }
+    }
+
+    document.getElementById('announcementForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        initSupabase();
+        
+        const title = document.getElementById('annTitle').value.trim();
+        const content = document.getElementById('annContent').value;
+        const icon = document.getElementById('annIcon').value.trim();
+        const sortOrder = parseInt(document.getElementById('annSortOrder').value) || 0;
+        const displayTimeRaw = document.getElementById('annDisplayTime').value;
+        const isActive = document.getElementById('annActive').value === 'true';
+        const editId = document.getElementById('editAnnId').value;
+
+        if (!title) {
+            showToast('标题不能为空', true);
+            return;
+        }
+
+        let displayTime = null;
+        if (displayTimeRaw) {
+            displayTime = new Date(displayTimeRaw).toISOString();
+        }
+
+        try {
+            let error;
+            
+            if (editId) {
+                if (typeof supabase?.from === 'function') {
+                    ({ error } = await supabase
+                        .from('announcements')
+                        .update({
+                            title,
+                            content,
+                            icon,
+                            sort_order: sortOrder,
+                            display_time: displayTime,
+                            is_active: isActive,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', parseInt(editId)));
+                } else {
+                    const url = `${SUPABASE_URL}/rest/v1/announcements?apikey=${SUPABASE_ANON_KEY}&id=eq.${parseInt(editId)}`;
+                    const response = await fetch(url, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title,
+                            content,
+                            icon,
+                            sort_order: sortOrder,
+                            display_time: displayTime,
+                            is_active: isActive,
+                            updated_at: new Date().toISOString()
+                        })
+                    });
+                    error = !response.ok ? new Error('Failed to update announcement') : null;
+                }
+                if (error) throw error;
+                showToast('公告已更新');
+            } else {
+                if (typeof supabase?.from === 'function') {
+                    ({ error } = await supabase
+                        .from('announcements')
+                        .insert({
+                            title,
+                            content,
+                            icon,
+                            sort_order: sortOrder,
+                            display_time: displayTime,
+                            is_active: isActive,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        }));
+                } else {
+                    const url = `${SUPABASE_URL}/rest/v1/announcements?apikey=${SUPABASE_ANON_KEY}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title,
+                            content,
+                            icon,
+                            sort_order: sortOrder,
+                            display_time: displayTime,
+                            is_active: isActive,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        })
+                    });
+                    error = !response.ok ? new Error('Failed to create announcement') : null;
+                }
+                if (error) throw error;
+                showToast('公告已创建');
+            }
+            closeAnnouncementModal();
+            loadAnnouncements();
+        } catch (err) {
+            showToast('保存失败: ' + err.message, true);
+        }
+    });
+
+    async function loadStats() {
+        try {
+            const { data, error } = await rpcCall('get_registration_key_stats');
+            if (error) throw error;
+            if (data && data.success) {
+                const stats = data.stats;
+                document.getElementById('statTotal').textContent = stats.total || 0;
+                document.getElementById('statUnused').textContent = stats.unused || 0;
+                document.getElementById('statUsed').textContent = stats.used || 0;
+                document.getElementById('statExpired').textContent = stats.expired || 0;
+            }
+        } catch (error) {
+            console.error('加载统计数据失败:', error);
+        }
+    }
+
+    async function loadAllData() {
+        await loadStats();
+        await loadAllKeys();
+    }
+
+    async function loadAllKeys() {
+        const keysList = document.getElementById('keysList');
+        keysList.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> 加载中...</div>';
+        
+        try {
+            const { data, error } = await rpcCall('get_all_registration_keys');
+            if (error) throw error;
+            
+            if (!data || !data.success || !data.keys || data.keys.length === 0) {
+                keysList.innerHTML = '<div class="empty-state"><i class="fas fa-key"></i> 暂无密钥记录</div>';
+                return;
+            }
+
+            keysList.innerHTML = data.keys.map(key => {
+                let statusClass = 'unused';
+                let statusText = '未使用';
+                if (key.is_used) {
+                    statusClass = 'used';
+                    statusText = '已使用';
+                } else if (key.is_expired) {
+                    statusClass = 'expired';
+                    statusText = '已过期';
+                }
+                
+                return `
+                    <div class="key-item">
+                        <div class="key-info">
+                            <div class="key-value">
+                                <span>${key.secret_key}</span>
+                                <button class="btn btn-sm btn-outline" onclick="copyKey('${key.secret_key}')"><i class="fas fa-copy"></i></button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteKey('${key.id}')"><i class="fas fa-trash"></i></button>
+                            </div>
+                            <div class="key-meta">
+                                <span>创建: ${formatDate(key.created_at)}</span>
+                                <span>过期: ${formatDate(key.expires_at)}</span>
+                                ${key.is_used ? `<span>使用者: ${key.used_by_username || '未知'}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="key-status ${statusClass}">${statusText}</div>
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            keysList.innerHTML = `<div class="empty-state" style="color: #ef4444;">加载失败: ${error.message}</div>`;
+        }
+    }
+
+    async function generateKeys() {
+        const count = parseInt(document.getElementById('generateCount').value) || 1;
+        const expiresMinutes = parseInt(document.getElementById('expiresDuration').value) || 10080;
+        
+        if (count < 1 || count > 20) {
+            showToast('生成数量需在1-20之间', true);
+            return;
+        }
+
+        try {
+            for (let i = 0; i < count; i++) {
+                const { error } = await rpcCall('generate_registration_key', { _expires_minutes: expiresMinutes });
+                if (error) throw error;
+            }
+
+            showToast(`成功生成 ${count} 个密钥`);
+            await loadAllData();
+        } catch (error) {
+            showToast('生成失败: ' + error.message, true);
+        }
+    }
+
+    async function cleanupExpired() {
+        try {
+            const { data, error } = await rpcCall('cleanup_expired_registration_keys');
+            if (error) throw error;
+
+            const count = data?.deleted_count || 0;
+            showToast(`已清理 ${count} 个过期密钥`);
+            await loadAllData();
+        } catch (error) {
+            showToast('清理失败: ' + error.message, true);
+        }
+    }
+
+    async function deleteKey(keyId) {
+        if (!confirm('确定要删除这个密钥吗？')) return;
+        
+        try {
+            const { data, error } = await rpcCall('delete_registration_key', { _key_id: keyId });
+            if (error) throw error;
+            
+            if (data && data.success) {
+                showToast('密钥删除成功');
+                await loadAllData();
+            } else {
+                showToast(data?.error || '删除失败', true);
+            }
+        } catch (error) {
+            showToast('删除失败: ' + error.message, true);
+        }
+    }
+
+    function copyKey(key) {
+        navigator.clipboard.writeText(key).then(() => {
+            showToast('密钥已复制到剪贴板');
+        }).catch(() => {
+            showToast('复制失败', true);
+        });
+    }
+
+    async function loadRedeemCodes() {
+        initSupabase();
+        const container = document.getElementById('redeemCodesList');
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> 加载中...</div>';
+        
+        try {
+            let data;
+            let error;
+            
+            if (typeof supabase?.from === 'function') {
+                ({ data, error } = await supabase
+                    .from('redeem_codes')
+                    .select('*, user_redeems(*)')
+                    .order('created_at', { ascending: false }));
+            } else {
+                const url = `${SUPABASE_URL}/rest/v1/redeem_codes?apikey=${SUPABASE_ANON_KEY}&select=*,user_redeems(*)&order=created_at.desc`;
+                const response = await fetch(url);
+                data = await response.json();
+                error = !response.ok ? new Error('Failed to fetch redeem codes') : null;
+            }
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-ticket-alt"></i> 暂无积分密钥</div>';
+                updateRedeemStats(0, 0, 0, 0);
+                return;
+            }
+
+            const now = new Date();
+            let total = data.length;
+            let active = 0;
+            let used = 0;
+            let expired = 0;
+
+            container.innerHTML = data.map(item => {
+                const isExpired = item.expire_time && new Date(item.expire_time) < now;
+                const isUsed = (item.user_redeems?.length || 0) >= (item.max_uses || 1);
+                const statusClass = isExpired ? 'expired' : (isUsed ? 'used' : 'unused');
+                const statusText = isExpired ? '已过期' : (isUsed ? '已用尽' : '可用');
+                
+                if (isExpired) expired++;
+                else if (isUsed) used++;
+                else active++;
+
+                return `
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas ${item.point_type === 'vip' ? 'fa-crown' : 'fa-coins'}"></i>
+                                    ${escapeHtml(item.code)}
+                                    <span class="badge badge-${statusClass}">${statusText}</span>
+                                </div>
+                            </div>
+                            <div style="font-size: 13px; color: #64748b; margin-bottom: 8px;">
+                                <span>类型: ${item.point_type === 'vip' ? '会员积分' : '普通积分'}</span>
+                                <span style="margin: 0 12px;">·</span>
+                                <span>数量: ${item.points}</span>
+                                <span style="margin: 0 12px;">·</span>
+                                <span>剩余次数: ${(item.max_uses || 1) - (item.user_redeems?.length || 0)}/${item.max_uses || 1}</span>
+                                ${item.expire_time ? `<span style="margin: 0 12px;">·</span><span>过期: ${formatDate(item.expire_time)}</span>` : ''}
+                            </div>
+                            <div class="card-actions">
+                                <button class="btn btn-sm btn-outline" onclick="showRedeemCodeUses('${item.id}')"><i class="fas fa-history"></i> 使用记录</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteRedeemCode('${item.id}')"><i class="fas fa-trash"></i> 删除</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            updateRedeemStats(total, active, used, expired);
+        } catch (err) {
+            container.innerHTML = `<div class="empty-state" style="color: #ef4444;"><i class="fas fa-exclamation-triangle"></i> 加载失败: ${err.message}</div>`;
+        }
+    }
+
+    function updateRedeemStats(total, active, used, expired) {
+        document.getElementById('statRedeemTotal').textContent = total;
+        document.getElementById('statRedeemActive').textContent = active;
+        document.getElementById('statRedeemUsed').textContent = used;
+        document.getElementById('statRedeemExpired').textContent = expired;
+    }
+
+    function showCreateRedeemCodeModal() {
+        document.getElementById('redeemCodeModalTitle').textContent = '创建积分密钥';
+        document.getElementById('redeemPointType').value = 'normal';
+        document.getElementById('redeemPoints').value = '';
+        document.getElementById('redeemMaxUses').value = '1';
+        document.getElementById('redeemExpireTime').value = '';
+        document.getElementById('editRedeemCodeId').value = '';
+        document.getElementById('redeemCodeModal').classList.add('active');
+    }
+
+    function closeRedeemCodeModal() {
+        document.getElementById('redeemCodeModal').classList.remove('active');
+    }
+
+    document.getElementById('redeemCodeForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        initSupabase();
+        
+        const pointType = document.getElementById('redeemPointType').value;
+        const points = parseInt(document.getElementById('redeemPoints').value);
+        const maxUses = parseInt(document.getElementById('redeemMaxUses').value) || 1;
+        const expireTimeRaw = document.getElementById('redeemExpireTime').value;
+        const editId = document.getElementById('editRedeemCodeId').value;
+
+        if (!points || points <= 0) {
+            showToast('请输入有效的积分数量', true);
+            return;
+        }
+
+        let expireTime = null;
+        if (expireTimeRaw) {
+            expireTime = new Date(expireTimeRaw).toISOString();
+        }
+
+        try {
+            const code = generateRandomCode();
+            let error;
+            
+            if (editId) {
+                if (typeof supabase?.from === 'function') {
+                    ({ error } = await supabase
+                        .from('redeem_codes')
+                        .update({
+                            point_type: pointType,
+                            points,
+                            max_uses: maxUses,
+                            expire_time: expireTime,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', editId));
+                } else {
+                    const url = `${SUPABASE_URL}/rest/v1/redeem_codes?apikey=${SUPABASE_ANON_KEY}&id=eq.${editId}`;
+                    const response = await fetch(url, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            point_type: pointType,
+                            points,
+                            max_uses: maxUses,
+                            expire_time: expireTime,
+                            updated_at: new Date().toISOString()
+                        })
+                    });
+                    error = !response.ok ? new Error('Failed to update redeem code') : null;
+                }
+                if (error) throw error;
+                showToast('积分密钥已更新');
+            } else {
+                if (typeof supabase?.from === 'function') {
+                    ({ error } = await supabase
+                        .from('redeem_codes')
+                        .insert({
+                            code,
+                            point_type: pointType,
+                            points,
+                            max_uses: maxUses,
+                            expire_time: expireTime,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        }));
+                } else {
+                    const url = `${SUPABASE_URL}/rest/v1/redeem_codes?apikey=${SUPABASE_ANON_KEY}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            code,
+                            point_type: pointType,
+                            points,
+                            max_uses: maxUses,
+                            expire_time: expireTime,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        })
+                    });
+                    error = !response.ok ? new Error('Failed to create redeem code') : null;
+                }
+                if (error) throw error;
+                showToast('积分密钥已创建');
+            }
+            closeRedeemCodeModal();
+            loadRedeemCodes();
+        } catch (err) {
+            showToast('保存失败: ' + err.message, true);
+        }
+    });
+
+    function generateRandomCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = '';
+        for (let i = 0; i < 8; i++) {
+            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return code;
+    }
+
+    async function deleteRedeemCode(id) {
+        if (!confirm('确定要删除此积分密钥吗？')) return;
+        initSupabase();
+        
+        try {
+            let error;
+            
+            if (typeof supabase?.from === 'function') {
+                ({ error } = await supabase.from('redeem_codes').delete().eq('id', id));
+            } else {
+                const url = `${SUPABASE_URL}/rest/v1/redeem_codes?apikey=${SUPABASE_ANON_KEY}&id=eq.${id}`;
+                const response = await fetch(url, { method: 'DELETE' });
+                error = !response.ok ? new Error('Failed to delete redeem code') : null;
+            }
+            
+            if (error) throw error;
+            showToast('积分密钥已删除');
+            loadRedeemCodes();
+        } catch (err) {
+            showToast('删除失败: ' + err.message, true);
+        }
+    }
+
+    async function showRedeemCodeUses(codeId) {
+        initSupabase();
+        const modal = document.getElementById('redeemCodeUsesModal');
+        const content = document.getElementById('redeemCodeUsesContent');
+        
+        content.innerHTML = '<span class="loading-spinner"></span> 加载中...';
+        modal.classList.add('active');
+        
+        try {
+            let data;
+            let error;
+            
+            if (typeof supabase?.from === 'function') {
+                ({ data, error } = await supabase
+                    .from('user_redeems')
+                    .select('*, user:vip_users(username)')
+                    .eq('code_id', codeId)
+                    .order('redeemed_at', { ascending: false }));
+            } else {
+                const url = `${SUPABASE_URL}/rest/v1/user_redeems?apikey=${SUPABASE_ANON_KEY}&select=*,user:vip_users(username)&code_id=eq.${codeId}&order=redeemed_at.desc`;
+                const response = await fetch(url);
+                data = await response.json();
+                error = !response.ok ? new Error('Failed to fetch redeem code uses') : null;
+            }
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                content.innerHTML = '<p style="text-align: center;">暂无使用记录</p>';
+                return;
+            }
+
+            content.innerHTML = `
+                <table style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>用户</th>
+                            <th>类型</th>
+                            <th>积分</th>
+                            <th>使用时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(use => `
+                            <tr>
+                                <td style="padding: 12px;">${escapeHtml(use.user?.username || '未知')}</td>
+                                <td style="padding: 12px;">
+                                    <span style="padding: 2px 8px; border-radius: 12px; font-size: 12px; background: ${use.point_type === 'vip' ? '#f5f3ff' : '#eff6ff'}; color: ${use.point_type === 'vip' ? '#7c3aed' : '#2563eb'};">
+                                        ${use.point_type === 'vip' ? '会员积分' : '普通积分'}
+                                    </span>
+                                </td>
+                                <td style="padding: 12px;">${use.points}</td>
+                                <td style="padding: 12px;">${use.redeemed_at ? new Date(use.redeemed_at).toLocaleString() : '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            showToast('加载失败：' + error.message);
+        }
+    }
+
+    function closeRedeemCodeUsesModal() {
+        document.getElementById('redeemCodeUsesModal').classList.remove('active');
+    }
+
+    function resetSignupForm() {
+        document.getElementById('signupUsername').value = '';
+        document.getElementById('signupPassword').value = '';
+        document.getElementById('signupInitialPoints').value = '0';
+        document.getElementById('signupMessage').style.display = 'none';
+    }
+
+    document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const username = document.getElementById('signupUsername').value.trim();
+        const password = document.getElementById('signupPassword').value;
+        const initialPoints = parseInt(document.getElementById('signupInitialPoints').value) || 0;
+        const messageEl = document.getElementById('signupMessage');
+
+        if (!username) {
+            showMessage(messageEl, '请输入用户名', true);
+            return;
+        }
+
+        if (!password || password.length < 6) {
+            showMessage(messageEl, '密码至少需要6位', true);
+            return;
+        }
+
+        try {
+            const { data, error } = await rpcCall('admin_create_user', {
+                _session_token: sessionToken,
+                _username: username,
+                _password: password,
+                _initial_points: initialPoints
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            
+            showMessage(messageEl, '用户创建成功！', false);
+            resetSignupForm();
+            setTimeout(() => messageEl.style.display = 'none', 3000);
+        } catch (err) {
+            showMessage(messageEl, '创建失败: ' + err.message, true);
+        }
+    });
+
+    function showMessage(el, msg, isError) {
+        el.textContent = msg;
+        el.style.background = isError ? '#fee2e2' : '#dcfce7';
+        el.style.color = isError ? '#dc2626' : '#15803d';
+        el.style.display = 'block';
+    }
+
+    function usePublicToken() {
+        const token = document.getElementById('publicTokenInput').value.trim();
+        if (!token) {
+            showToast('请输入公共Token', true);
+            return;
+        }
+        usePublicMemberToken(token);
+    }
+
+    (async function checkStoredSession() {
+        const stored = localStorage.getItem('adminSession');
+        if (stored) {
+            sessionToken = stored;
+            try {
+                initSupabase();
+                const { data: test } = await rpcCall('admin_list_users', { _session_token: stored });
+                if (test?.success && test.users?.length > 0) {
+                    currentUser = { id: test.users[0].id, username: test.users[0].username, isAdmin: true };
+                    
+                    document.getElementById('loginPanel').classList.remove('active');
+                    document.getElementById('loginPanel').style.display = 'none';
+                    document.getElementById('sidebar').style.display = 'flex';
+                    document.getElementById('sidebarUsername').textContent = currentUser.username;
+                    switchPage('users');
+                    await refreshUserList();
+                } else {
+                    adminClearUser();
+                }
+            } catch { 
+                adminClearUser(); 
+            }
+        }
+    })();
+</script>
+</body>
+</html>

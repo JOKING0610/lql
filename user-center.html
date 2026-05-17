@@ -1,0 +1,2853 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>零柒零音乐 - 用户中心</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* ===== 基础 CSS 变量 ===== */
+        :root {
+            --primary: #000000;
+            --primary-hover: #222222;
+            --bg: #ffffff;
+            --surface: #f9f9f9;
+            --surface-elevated: #f5f5f5;
+            --text: #000000;
+            --text-secondary: #666666;
+            --text-tertiary: #999999;
+            --border: rgba(0, 0, 0, 0.1);
+            --border-strong: rgba(0, 0, 0, 0.2);
+            --success: #333333;
+            --error: #dc2626;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.15);
+            --accent-color: #000000;
+            --accent-dark: #333333;
+            --accent-text: #ffffff;
+            --accent-rgb: 0,0,0;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --sidebar-width: 260px;
+
+            /* 间距 Token (4pt 基础) */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 12px;
+            --space-lg: 16px;
+            --space-xl: 24px;
+            --space-2xl: 32px;
+            --space-3xl: 48px;
+
+            /* 安全区 */
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+
+            /* 语义化 Z-index */
+            --z-canvas: 0;
+            --z-content: 1;
+            --z-modal-backdrop: 200;
+            --z-modal: 300;
+            --z-toast: 500;
+            --z-overlay: 900;
+            --z-sidebar: 950;
+
+            /* 缓动曲线 */
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+            --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        /* ===== 深色主题 ===== */
+        html.dark-theme {
+            --primary: #ffffff;
+            --primary-hover: #e0e0e0;
+            --bg: #121212;
+            --surface: #1e1e1e;
+            --surface-elevated: #252525;
+            --text: #ffffff;
+            --text-secondary: #b0b0b0;
+            --text-tertiary: #808080;
+            --border: rgba(255, 255, 255, 0.1);
+            --border-strong: rgba(255, 255, 255, 0.2);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.4);
+            --accent-color: #ffffff;
+            --accent-dark: #cccccc;
+            --accent-text: #000000;
+            --accent-rgb: 255,255,255;
+            --glass-bg: rgba(30, 30, 30, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ===== 配色方案 - 浅色 ===== */
+        html.color-scheme-light-default:not(.dark-theme) { --bg: #ffffff; }
+        html.color-scheme-light-warm:not(.dark-theme) { --bg: #fdf6e3; }
+        html.color-scheme-light-gray:not(.dark-theme) { --bg: #f0f2f5; }
+        html.color-scheme-light-blue:not(.dark-theme) { --bg: #e8f0fe; }
+
+        /* ===== 配色方案 - 深色 ===== */
+        html.color-scheme-dark-default.dark-theme { --bg: #121212; }
+        html.color-scheme-dark-deep.dark-theme { --bg: #0a0a0a; }
+        html.color-scheme-dark-slate.dark-theme { --bg: #1a1e24; }
+        html.color-scheme-dark-navy.dark-theme { --bg: #0f172a; }
+
+        /* ===== 星空背景 ===== */
+        html.star-bg-active,
+        html.star-bg-active body {
+            background: #0a0a1a !important;
+            transition: none !important;
+        }
+        html.star-bg-active .sidebar {
+            background: rgba(10, 10, 26, 0.9) !important;
+            border-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        html.star-bg-active .sidebar-overlay {
+            background: rgba(10, 10, 26, 0.7) !important;
+        }
+        html.star-bg-active .content-panel-card,
+        html.star-bg-active .auth-container,
+        html.star-bg-active .modal-box {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        html.star-bg-active .points-card {
+            background: rgba(255, 152, 0, 0.25) !important;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        html.star-bg-active .main-content,
+        html.star-bg-active .content-panel-card,
+        html.star-bg-active .auth-container,
+        html.star-bg-active .modal-box,
+        html.star-bg-active .points-card,
+        html.star-bg-active .sidebar-nav-item {
+            position: relative;
+            z-index: 1;
+        }
+        html.star-bg-active .sidebar {
+            z-index: 950;
+        }
+
+        #starCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            display: none;
+        }
+        html.star-bg-active #starCanvas { display: block; }
+
+        /* ===== 基础样式 ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scrollbar-width: none; -ms-overflow-style: none; }
+        html::-webkit-scrollbar { display: none; }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background 0.3s ease;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* ===== 侧边栏遮罩 (移动端) ===== */
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: var(--z-overlay);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s var(--ease-out-expo);
+        }
+        .sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* ===== 侧边栏 ===== */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            height: 100dvh;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            z-index: var(--z-sidebar);
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-md);
+            transition: transform 0.35s var(--ease-out-expo);
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        /* 彩虹滚动条 - JS 驱动版 */
+        .sidebar-header-decor {
+            height: 4px;
+            background: linear-gradient(
+                90deg,
+                hsl(0, 100%, 50%), hsl(15, 100%, 50%), hsl(30, 100%, 50%), hsl(45, 100%, 50%),
+                hsl(60, 100%, 50%), hsl(75, 100%, 50%), hsl(90, 100%, 50%), hsl(105, 100%, 50%),
+                hsl(120, 100%, 50%), hsl(135, 100%, 50%), hsl(150, 100%, 50%), hsl(165, 100%, 50%),
+                hsl(180, 100%, 50%), hsl(195, 100%, 50%), hsl(210, 100%, 50%), hsl(225, 100%, 50%),
+                hsl(240, 100%, 50%), hsl(255, 100%, 50%), hsl(270, 100%, 50%), hsl(285, 100%, 50%),
+                hsl(300, 100%, 50%), hsl(315, 100%, 50%), hsl(330, 100%, 50%), hsl(345, 100%, 50%),
+                hsl(0, 100%, 50%), hsl(15, 100%, 50%), hsl(30, 100%, 50%), hsl(45, 100%, 50%),
+                hsl(60, 100%, 50%), hsl(75, 100%, 50%), hsl(90, 100%, 50%), hsl(105, 100%, 50%),
+                hsl(120, 100%, 50%), hsl(135, 100%, 50%), hsl(150, 100%, 50%), hsl(165, 100%, 50%),
+                hsl(180, 100%, 50%), hsl(195, 100%, 50%), hsl(210, 100%, 50%), hsl(225, 100%, 50%),
+                hsl(240, 100%, 50%), hsl(255, 100%, 50%), hsl(270, 100%, 50%), hsl(285, 100%, 50%),
+                hsl(300, 100%, 50%), hsl(315, 100%, 50%), hsl(330, 100%, 50%), hsl(345, 100%, 50%)
+            );
+            background-size: 200% 100%;
+            flex-shrink: 0;
+            will-change: background-position;
+        }
+
+        /* 侧边栏用户信息 */
+        .sidebar-user {
+            padding: 20px 20px 12px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .sidebar-avatar-wrapper {
+            position: relative;
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 10px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-dark));
+            padding: 3px;
+            box-shadow: 0 6px 22px rgba(var(--accent-rgb), 0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sidebar-avatar-wrapper:hover {
+            transform: scale(1.06);
+            box-shadow: 0 10px 30px rgba(var(--accent-rgb), 0.45);
+        }
+        .sidebar-avatar-wrapper.vip {
+            background: linear-gradient(135deg, #ffd700, #ffb347, #ffd700);
+            box-shadow: 0 6px 22px rgba(255, 215, 0, 0.4);
+        }
+        .sidebar-avatar-wrapper.vip:hover {
+            transform: scale(1.06);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.6);
+        }
+        .sidebar-avatar-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            font-size: 28px;
+            color: var(--text-tertiary);
+        }
+        .sidebar-avatar-inner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .sidebar-online-dot {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            width: 14px;
+            height: 14px;
+            background: #22c55e;
+            border-radius: 50%;
+            border: 3px solid var(--surface);
+            box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18); }
+            50% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0.04); }
+        }
+        .sidebar-user-name {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.2px;
+            line-height: 1.2;
+        }
+        .sidebar-user-role {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            background: var(--surface-elevated);
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 14px;
+            margin-top: 3px;
+        }
+
+        /* 侧边栏统计 */
+        .sidebar-stats {
+            display: flex;
+            gap: 6px;
+            padding: 8px 16px 12px;
+            flex-shrink: 0;
+        }
+        .sidebar-stat {
+            flex: 1;
+            text-align: center;
+            background: var(--surface-elevated);
+            border-radius: 10px;
+            padding: 10px 6px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .sidebar-stat:hover {
+            background: var(--bg);
+            border-color: var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+        .sidebar-stat-value {
+            font-size: clamp(14px, 3.5vw, 16px);
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.3px;
+            line-height: 1;
+            overflow-wrap: anywhere;
+            word-break: break-all;
+        }
+        .sidebar-stat-label {
+            font-size: 10.5px;
+            color: var(--text-tertiary);
+            margin-top: 3px;
+            font-weight: 500;
+        }
+
+        /* 导航菜单 */
+        .sidebar-nav {
+            flex: 1;
+            padding: 4px 12px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .sidebar-nav-label {
+            font-size: 10.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-tertiary);
+            padding: 10px 10px 4px;
+        }
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 13.8px;
+            border: none;
+            background: transparent;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+            outline: none;
+        }
+        .sidebar-nav-item:hover {
+            background: var(--surface-elevated);
+            color: var(--text);
+        }
+        .sidebar-nav-item:active {
+            background: var(--border);
+            transform: scale(0.98);
+            transition: all 0.1s ease;
+        }
+        .sidebar-nav-item.active {
+            background: var(--surface-elevated);
+            color: var(--text);
+            font-weight: 600;
+            box-shadow: inset 3px 0 0 var(--accent-color);
+        }
+        .sidebar-nav-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            background: var(--bg);
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        .sidebar-nav-item.active .sidebar-nav-icon {
+            background: rgba(var(--accent-rgb), 0.15);
+            color: var(--accent-color);
+        }
+        .sidebar-nav-arrow {
+            margin-left: auto;
+            color: var(--text-tertiary);
+            transition: all 0.2s;
+            font-size: 11px;
+        }
+        .sidebar-nav-item:hover .sidebar-nav-arrow {
+            color: var(--text-secondary);
+        }
+
+        /* 侧边栏分割线 */
+        .sidebar-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 16px;
+            flex-shrink: 0;
+        }
+
+        /* 侧边栏底部 */
+        .sidebar-footer {
+            flex-shrink: 0;
+            padding: 8px 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        /* 主题切换组（侧边栏内） */
+        .sidebar-theme-group {
+            display: flex;
+            align-items: center;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 3px;
+            gap: 2px;
+            position: relative;
+        }
+        .sidebar-theme-btn {
+            flex: 1;
+            height: 32px;
+            border-radius: 10px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+            font-size: 13px;
+            position: relative;
+            z-index: 2;
+            font-family: inherit;
+        }
+        .sidebar-theme-btn:hover { color: var(--text); }
+        .sidebar-theme-btn.active {
+            color: var(--accent-text);
+        }
+        .sidebar-theme-pill {
+            position: absolute;
+            height: 32px;
+            border-radius: 10px;
+            background: var(--accent-color);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1;
+            top: 3px;
+        }
+
+        /* 返回首页按钮 */
+        .sidebar-back-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+            font-family: inherit;
+            outline: none;
+        }
+        .sidebar-back-btn:hover {
+            background: var(--surface-elevated);
+            color: var(--text);
+        }
+        .sidebar-back-btn i { font-size: 14px; }
+
+        /* 退出按钮 */
+        .sidebar-logout-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            background: rgba(220, 38, 38, 0.05);
+            color: var(--error);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+            font-family: inherit;
+            outline: none;
+        }
+        .sidebar-logout-btn:hover {
+            background: rgba(220, 38, 38, 0.1);
+            border-color: var(--error);
+        }
+        .sidebar-logout-btn i { font-size: 14px; }
+
+        /* ===== 主内容区域 ===== */
+        .main-content {
+            flex: 1;
+            padding-left: calc(var(--sidebar-width) + var(--safe-left) + 28px);
+            padding-right: calc(28px + var(--safe-right));
+            padding-top: calc(24px + var(--safe-top));
+            padding-bottom: calc(40px + var(--safe-bottom));
+            min-height: 100vh;
+            min-height: 100dvh;
+            transition: padding-left 0.35s var(--ease-out-expo);
+            box-sizing: border-box;
+        }
+
+        /* 顶部栏（含汉堡菜单，移动端可见） */
+        .top-bar {
+            display: none;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .hamburger-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            transition: all 0.2s;
+            flex-shrink: 0;
+            outline: none;
+            font-size: 16px;
+        }
+        .hamburger-btn:hover {
+            background: var(--surface-elevated);
+        }
+        .top-bar-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.2px;
+        }
+
+        /* 内容面板 */
+        .content-panel {
+            display: none;
+            animation: fadeSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .content-panel.active { display: block; }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel-header { margin-bottom: 20px; }
+        .panel-title {
+            font-size: clamp(18px, 4vw, 22px);
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.3px;
+        }
+        .panel-subtitle {
+            font-size: clamp(12px, 3vw, 13.5px);
+            color: var(--text-secondary);
+            margin-top: 3px;
+        }
+
+        /* 内容卡片 */
+        .content-panel-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 24px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 16px;
+            transition: all 0.2s;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+        .content-panel-card:hover { box-shadow: var(--shadow-md); }
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 12px;
+            letter-spacing: -0.1px;
+        }
+
+        /* ===== 账号面板 - 统计卡片 ===== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px 16px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+        .stat-icon {
+            font-size: 20px;
+            color: var(--accent-color);
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: clamp(18px, 4vw, 22px);
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* ===== 账号面板 - 积分卡 ===== */
+        .points-card {
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-dark));
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            color: var(--accent-text);
+        }
+        .points-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .points-title {
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .points-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .points-item {
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+        .points-num {
+            font-size: clamp(20px, 4.5vw, 24px);
+            font-weight: 700;
+            overflow-wrap: anywhere;
+            word-break: break-all;
+        }
+        .points-label {
+            font-size: 11px;
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+
+        /* ===== 账号面板 - 功能菜单 ===== */
+        .menu-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+        .menu-section-title {
+            padding: 14px 20px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--border);
+        }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item:hover { background: var(--surface-elevated); }
+        .menu-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+        .menu-text { flex: 1; }
+        .menu-title { font-size: 14px; font-weight: 600; }
+        .menu-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        .menu-arrow {
+            color: var(--text-tertiary);
+            font-size: 12px;
+        }
+
+        /* ===== 积分记录面板 ===== */
+
+        /* 积分兑换会员选项 */
+        .membership-option {
+            background: var(--surface-elevated);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 14px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .membership-option:hover {
+            border-color: var(--accent-color);
+            background: var(--bg);
+        }
+        .membership-option.selected {
+            border-color: var(--accent-color);
+            background: rgba(var(--accent-rgb), 0.1);
+            box-shadow: 0 0 0 1px var(--accent-color);
+        }
+        .membership-option-days {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .membership-option-cost {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .membership-option.selected .membership-option-days {
+            color: var(--accent-color);
+        }
+        .membership-option.selected .membership-option-cost {
+            color: var(--accent-dark);
+        }
+        .points-history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .points-history-item:last-child { border-bottom: none; }
+        .points-history-reason {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+        }
+        .points-history-time {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+        }
+        .points-history-points {
+            font-size: 16px;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-left: 12px;
+        }
+        .points-history-points.positive { color: #22c55e; }
+        .points-history-points.negative { color: var(--error); }
+
+        /* ===== 播放历史面板 ===== */
+        .play-history-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 8px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+            border-radius: 8px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        .play-history-item:last-child { border-bottom: none; }
+        .play-history-item:hover { background: var(--surface-elevated); }
+        .play-history-cover {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            background: var(--surface-elevated);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            color: var(--text-tertiary);
+            font-size: 16px;
+        }
+        .play-history-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .play-history-info { flex: 1; min-width: 0; }
+        .play-history-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .play-history-artist {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .play-history-platform {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 8px;
+            background: var(--surface-elevated);
+            color: var(--text-tertiary);
+            flex-shrink: 0;
+        }
+        .play-history-clear-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            background: rgba(220, 38, 38, 0.05);
+            color: var(--error);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+            font-family: inherit;
+            outline: none;
+            width: 100%;
+            margin-top: 12px;
+        }
+        .play-history-clear-btn:hover {
+            background: rgba(220, 38, 38, 0.1);
+            border-color: var(--error);
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-tertiary);
+        }
+        .empty-state i {
+            font-size: 36px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* ===== 未登录：登录/注册 ===== */
+        .auth-container { display: none; }
+        .auth-container.show { display: block; }
+
+        .auth-hero {
+            text-align: center;
+            padding: 40px 0 32px;
+        }
+        .auth-hero-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+            color: var(--text-tertiary);
+        }
+        .auth-hero-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .auth-hero-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: var(--surface);
+            border-radius: 14px;
+            padding: 4px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.25s;
+        }
+        .auth-tab.active {
+            background: var(--primary);
+            color: var(--bg);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .auth-form { display: none; }
+        .auth-form.show { display: block; }
+
+        .form-group { margin-bottom: 14px; }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .form-input {
+            width: 100%;
+            height: 48px;
+            padding: 0 16px;
+            background: var(--bg);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: clamp(14px, 3.5vw, 15px);
+            color: var(--text);
+            outline: none;
+            transition: all 0.25s;
+            box-shadow: var(--shadow-sm);
+        }
+        .form-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,0,0,0.04);
+        }
+        .form-input::placeholder { color: var(--text-tertiary); }
+
+        .submit-btn {
+            width: 100%;
+            height: 48px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            background: var(--primary);
+            color: var(--bg);
+            box-shadow: var(--shadow-md);
+            transition: all 0.25s;
+            margin-top: 8px;
+        }
+        .submit-btn:hover {
+            background: var(--primary-hover);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-1px);
+        }
+        .submit-btn:active { transform: translateY(0); }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .forgot-link {
+            display: inline-block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            transition: color 0.2s;
+        }
+        .forgot-link:hover { color: var(--primary); }
+
+        .error-msg {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.2);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #dc2626;
+            margin-bottom: 14px;
+            display: none;
+        }
+        .error-msg.show { display: block; }
+
+        .success-msg {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #16a34a;
+            margin-bottom: 14px;
+            display: none;
+        }
+        .success-msg.show { display: block; }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 6px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 已登录区隐藏 */
+        .logged-in-section { display: none; }
+        .logged-in-section.show { display: flex; }
+
+        /* ===== 确认弹窗 ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: var(--z-modal-backdrop);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+
+        .modal-box {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 28px 24px;
+            width: min(360px, 90vw);
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .modal-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .modal-btn.cancel {
+            background: var(--surface-elevated);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .modal-btn.confirm {
+            background: var(--error);
+            border: none;
+            color: white;
+        }
+        .modal-btn:hover { opacity: 0.9; }
+
+        /* ===== Toast ===== */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: var(--z-toast);
+            opacity: 0;
+            transition: all 0.3s var(--ease-out-quart);
+            pointer-events: none;
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.success { border-left: 3px solid #22c55e; }
+        .toast.error { border-left: 3px solid #ef4444; }
+
+        /* ===== 头像上传隐藏 ===== */
+        .avatar-file-input { display: none; }
+
+        /* ===== 版本信息 ===== */
+        .version-info {
+            text-align: center;
+            padding: 20px 0;
+            color: var(--text-tertiary);
+            font-size: 12px;
+        }
+
+        /* ===== 响应式 ===== */
+
+        /* 平板 (769-1024px): 窄侧边栏 */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            :root { --sidebar-width: 220px; }
+            .sidebar { transform: translateX(0) !important; }
+            .sidebar-overlay { display: none !important; }
+            .main-content { padding-left: calc(var(--sidebar-width) + 20px); padding-right: 20px; padding-top: 20px; padding-bottom: 36px; }
+            .sidebar-user { padding: 16px 16px 10px; }
+            .sidebar-avatar-wrapper { width: 60px; height: 60px; }
+            .sidebar-user-name { font-size: 14px; }
+            .sidebar-stats { padding: 10px 12px; gap: 4px; }
+            .sidebar-stat-value { font-size: 16px; }
+            .sidebar-stat-label { font-size: 10px; }
+            .sidebar-nav-item { padding: 11px 14px; font-size: 13px; }
+            .panel-title { font-size: 20px; }
+            .stat-card { padding: 16px 14px; }
+            .stat-value { font-size: 20px; }
+            .points-num { font-size: 22px; }
+            .content-panel-card { margin-left: 0 !important; margin-right: 0 !important; width: 100% !important; }
+        }
+
+        /* 桌面 (>=1025px) */
+        @media (min-width: 1025px) {
+            .sidebar { transform: translateX(0) !important; }
+            .sidebar-overlay { display: none !important; }
+            .main-content { padding-left: calc(var(--sidebar-width) + 28px + var(--safe-left)); }
+        }
+
+        /* 手机 (< 768px) */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                box-shadow: var(--shadow-lg);
+                width: 280px;
+            }
+            .sidebar.open { transform: translateX(0); }
+            .main-content {
+                padding-left: 14px;
+                padding-right: 14px;
+                padding-top: 14px;
+                padding-bottom: 30px;
+            }
+            .top-bar { display: flex; }
+            .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .stat-card { padding: 14px 12px; }
+            .stat-value { font-size: 20px; }
+            .stat-icon { font-size: 18px; }
+            .panel-title { font-size: 19px; }
+            .panel-subtitle { font-size: 13px; }
+            .content-panel-card { padding: 16px; border-radius: 14px; margin-left: 0 !important; margin-right: 0 !important; width: 100% !important; }
+            .points-card { padding: 16px; border-radius: 14px; }
+            .points-grid { gap: 8px; }
+            .points-item { padding: 12px; }
+            .points-num { font-size: 22px; }
+            .menu-item { padding: 14px 16px; gap: 12px; }
+            .menu-icon { width: 34px; height: 34px; font-size: 14px; }
+            .menu-title { font-size: 13.5px; }
+            .menu-desc { font-size: 11.5px; }
+            .play-history-item { padding: 10px 6px; gap: 10px; }
+            .play-history-cover { width: 40px; height: 40px; }
+            .play-history-name { font-size: 13.5px; }
+            .play-history-platform { font-size: 9px; padding: 2px 6px; }
+            .points-history-item { padding: 12px 0; }
+            .points-history-reason { font-size: 13px; }
+            .points-history-points { font-size: 15px; }
+            .auth-hero { padding: 28px 0 24px; }
+            .auth-hero-icon { width: 60px; height: 60px; font-size: 24px; }
+            .auth-hero-title { font-size: 20px; }
+            .form-input { height: 44px; font-size: 14px; }
+            .submit-btn { height: 44px; font-size: 14px; }
+            .modal-box { padding: 24px 20px; border-radius: 16px; }
+            .modal-btns { flex-direction: column; gap: 8px; }
+            .modal-btn { padding: 12px; }
+        }
+
+        /* 小屏手机 (< 480px) */
+        @media (max-width: 480px) {
+            .main-content { padding-left: 10px; padding-right: 10px; padding-top: 12px; padding-bottom: 28px; }
+            .content-panel-card { padding: 14px 12px; border-radius: 12px; margin-left: 0 !important; margin-right: 0 !important; width: 100% !important; }
+            .points-card { padding: 14px 12px; border-radius: 12px; }
+            .panel-title { font-size: 17px; }
+            .panel-header { margin-bottom: 14px; }
+            .stats-row { gap: 6px; }
+            .stat-card { padding: 12px 8px; border-radius: 12px; }
+            .stat-value { font-size: 18px; }
+            .stat-label { font-size: 11px; }
+            .points-grid { gap: 6px; }
+            .points-item { padding: 10px 8px; border-radius: 10px; }
+            .points-num { font-size: 20px; }
+            .points-label { font-size: 10px; }
+            .menu-section-title { padding: 12px 16px 6px; font-size: 11px; }
+            .menu-item { padding: 12px 14px; }
+            .menu-icon { width: 32px; height: 32px; border-radius: 8px; font-size: 13px; }
+            .menu-title { font-size: 13px; }
+            .menu-desc { font-size: 11px; }
+            .play-history-cover { width: 36px; height: 36px; border-radius: 6px; }
+            .play-history-name { font-size: 13px; }
+            .play-history-artist { font-size: 11px; }
+            .points-history-item { padding: 10px 0; }
+            .points-history-reason { font-size: 12.5px; }
+            .points-history-time { font-size: 11px; }
+            .points-history-points { font-size: 14px; }
+            .auth-tabs { border-radius: 12px; }
+            .auth-tab { padding: 9px; font-size: 13px; }
+            .form-input { height: 42px; border-radius: 10px; font-size: 14px; }
+            .submit-btn { height: 42px; border-radius: 10px; }
+            .empty-state { padding: 30px 16px; }
+            .empty-state i { font-size: 30px; }
+            .sidebar { width: 260px; }
+            .top-bar { margin-bottom: 14px; padding-bottom: 12px; }
+            .top-bar-title { font-size: 16px; }
+        }
+
+        /* 触控设备优化 */
+        @media (hover: none) and (pointer: coarse) {
+            .menu-item { min-height: 48px; }
+            .play-history-item { min-height: 52px; }
+            .points-history-item { min-height: 48px; }
+            .sidebar-nav-item { min-height: 44px; }
+            .hamburger-btn { width: 44px; height: 44px; }
+            .submit-btn { min-height: 48px; }
+            .form-input { min-height: 48px; }
+        }
+
+        /* 横屏手机优化 */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .auth-hero { padding: 16px 0 12px; }
+            .auth-hero-icon { width: 48px; height: 48px; font-size: 20px; margin-bottom: 10px; }
+            .auth-hero-title { font-size: 18px; }
+            .auth-hero-desc { font-size: 12px; }
+            .sidebar-header-decor { height: 3px; }
+            .sidebar-user { padding: 12px 16px 8px; }
+            .sidebar-avatar-wrapper { width: 48px; height: 48px; }
+        }
+
+        /* ===== 无障碍: 减弱动效 ===== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            .sidebar { transition: none !important; }
+            .sidebar-overlay { transition: none !important; }
+            .toast { transition: none !important; }
+            .modal-overlay { transition: none !important; }
+            .modal-content { transition: none !important; }
+        }
+
+        /* ===== 无障碍: 键盘焦点样式 ===== */
+        :focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+        .form-input:focus-visible {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
+        }
+        .menu-item:focus-visible,
+        .sidebar-nav-item:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: -2px;
+            background: var(--surface-elevated);
+        }
+        .submit-btn:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+            box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.2);
+        }
+
+        /* ===== 触控目标: 基础保障 ===== */
+        .sidebar-nav-item { min-height: 44px; }
+        .submit-btn { min-height: 48px; }
+    </style>
+</head>
+<body>
+    <!-- 星空背景 Canvas -->
+    <canvas id="starCanvas"></canvas>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 侧边栏遮罩 (移动端) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- ==================== 侧边栏 ==================== -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header-decor"></div>
+
+        <!-- 未登录时显示的简洁侧边栏 -->
+        <div id="sidebarGuest" style="display:none; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 20px; text-align:center;">
+            <div style="width:64px;height:64px;border-radius:50%;background:var(--surface-elevated);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--text-tertiary);margin-bottom:16px;">
+                <i class="fas fa-user-astronaut"></i>
+            </div>
+            <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;">未登录</div>
+            <div style="font-size:13px;color:var(--text-secondary);">请先登录或注册</div>
+        </div>
+
+        <!-- 已登录时显示的完整侧边栏 -->
+        <div id="sidebarLoggedIn" style="display:none; flex:1; flex-direction:column;">
+            <!-- 用户信息 -->
+            <div class="sidebar-user">
+                <div class="sidebar-avatar-wrapper" title="点击更换头像" onclick="triggerAvatarUpload()">
+                    <div class="sidebar-avatar-inner" id="sidebarAvatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span class="sidebar-online-dot" title="在线"></span>
+                </div>
+                <div class="sidebar-user-name" id="sidebarUserName">用户</div>
+                <span class="sidebar-user-role" id="sidebarUserRole">普通用户</span>
+                <input type="file" id="avatarFileInput" class="avatar-file-input" accept="image/*" onchange="handleAvatarUpload(event)" />
+            </div>
+
+            <!-- 统计 -->
+            <div class="sidebar-stats">
+                <div class="sidebar-stat">
+                    <div class="sidebar-stat-value" id="sidebarStatPlays">0</div>
+                    <div class="sidebar-stat-label">播放</div>
+                </div>
+                <div class="sidebar-stat">
+                    <div class="sidebar-stat-value" id="sidebarStatPoints">0</div>
+                    <div class="sidebar-stat-label">积分</div>
+                </div>
+                <div class="sidebar-stat">
+                    <div class="sidebar-stat-value" id="sidebarStatHistory">0</div>
+                    <div class="sidebar-stat-label">历史</div>
+                </div>
+            </div>
+
+            <!-- 导航菜单 -->
+            <nav class="sidebar-nav" aria-label="用户中心导航">
+                <span class="sidebar-nav-label">主菜单</span>
+                <button class="sidebar-nav-item active" data-panel="account" onclick="switchTab('account', this)">
+                    <span class="sidebar-nav-icon"><i class="fas fa-user-circle"></i></span>
+                    账号
+                    <span class="sidebar-nav-arrow"><i class="fas fa-chevron-right"></i></span>
+                </button>
+                <button class="sidebar-nav-item" data-panel="points" onclick="switchTab('points', this)">
+                    <span class="sidebar-nav-icon"><i class="fas fa-coins"></i></span>
+                    积分
+                    <span class="sidebar-nav-arrow"><i class="fas fa-chevron-right"></i></span>
+                </button>
+                <button class="sidebar-nav-item" data-panel="history" onclick="switchTab('history', this)">
+                    <span class="sidebar-nav-icon"><i class="fas fa-history"></i></span>
+                    播放历史
+                    <span class="sidebar-nav-arrow"><i class="fas fa-chevron-right"></i></span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- 底部按钮（始终显示） -->
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-footer">
+            <!-- 主题切换 -->
+            <div class="sidebar-theme-group" id="sidebarThemeGroup">
+                <div class="sidebar-theme-pill" id="sidebarThemePill"></div>
+                <button class="sidebar-theme-btn" data-theme="light" onclick="switchTheme('light')" title="浅色主题">
+                    <i class="fas fa-sun"></i>
+                </button>
+                <button class="sidebar-theme-btn" data-theme="dark" onclick="switchTheme('dark')" title="深色主题">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="sidebar-theme-btn" data-theme="star" onclick="switchTheme('star')" title="星空主题">
+                    <i class="fas fa-star"></i>
+                </button>
+            </div>
+            <button class="sidebar-back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i> 返回首页
+            </button>
+            <!-- 已登录时显示退出按钮 -->
+            <button class="sidebar-logout-btn" id="sidebarLogoutBtn" style="display:none;" onclick="showLogoutConfirm()">
+                <i class="fas fa-sign-out-alt"></i> 退出登录
+            </button>
+        </div>
+    </aside>
+
+    <!-- ==================== 主内容区域 ==================== -->
+    <main class="main-content" id="mainContent">
+        <!-- 顶部栏 (移动端可见) -->
+        <div class="top-bar">
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="菜单">
+                <i class="fas fa-bars"></i>
+            </button>
+            <span class="top-bar-title" id="topBarTitle">账号</span>
+        </div>
+
+        <!-- ===== 未登录区 ===== -->
+        <div class="auth-container show" id="authSection">
+            <div class="auth-hero">
+                <div class="auth-hero-icon">
+                    <i class="fas fa-user-astronaut"></i>
+                </div>
+                <div class="auth-hero-title">欢迎来到零柒零音乐</div>
+                <div class="auth-hero-desc">登录后享受数据同步、积分兑换等专属服务</div>
+            </div>
+
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">登录</div>
+                <div class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">注册</div>
+            </div>
+
+            <div class="error-msg" id="errorMsg"></div>
+            <div class="success-msg" id="successMsg"></div>
+
+            <!-- 登录表单 -->
+            <form class="auth-form show" id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" class="form-input" id="loginUsername" placeholder="请输入用户名" autocomplete="username" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="password" class="form-input" id="loginPassword" placeholder="请输入密码" autocomplete="current-password" />
+                </div>
+                <span class="forgot-link" onclick="alert('请联系管理员重置密码')">忘记密码？</span>
+                <button type="submit" class="submit-btn" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> 登录
+                </button>
+            </form>
+
+            <!-- 注册表单 -->
+            <form class="auth-form" id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" class="form-input" id="regUsername" placeholder="字母、数字或中文" autocomplete="off" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="password" class="form-input" id="regPassword" placeholder="至少6位" autocomplete="new-password" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">确认密码</label>
+                    <input type="password" class="form-input" id="regConfirmPwd" placeholder="再次输入密码" autocomplete="off" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">注册密钥</label>
+                    <input type="text" class="form-input" id="regSecretKey" placeholder="联系管理员获取" autocomplete="off" />
+                </div>
+                <button type="submit" class="submit-btn" id="regBtn">
+                    <i class="fas fa-user-plus"></i> 注册
+                </button>
+            </form>
+        </div>
+
+        <!-- ===== 已登录区 ===== -->
+        <div class="logged-in-section" id="loggedInSection">
+            <!-- Tab: 账号 -->
+            <section class="content-panel active" id="panel-account">
+                <div class="panel-header">
+                    <h1 class="panel-title"><i class="fas fa-user-circle"></i> 账号</h1>
+                    <p class="panel-subtitle">管理您的个人信息和账户功能</p>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-play-circle"></i></div>
+                        <div class="stat-value" id="statPlays">0</div>
+                        <div class="stat-label">播放次数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                        <div class="stat-value" id="statTime">0</div>
+                        <div class="stat-label">播放时长</div>
+                    </div>
+                </div>
+
+                <!-- 积分卡 -->
+                <div class="points-card">
+                    <div class="points-header">
+                        <div class="points-title"><i class="fas fa-coins"></i> 我的积分</div>
+                    </div>
+                    <div class="points-grid">
+                        <div class="points-item">
+                            <div class="points-num" id="pointsNormal">0</div>
+                            <div class="points-label">普通积分</div>
+                        </div>
+                        <div class="points-item">
+                            <div class="points-num" id="pointsVip">0</div>
+                            <div class="points-label">会员积分</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 功能菜单 - 应用功能 -->
+                <div class="menu-section">
+                    <div class="menu-section-title">应用功能</div>
+                    <div class="menu-item" onclick="goToApp('home')">
+                        <div class="menu-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="menu-text">
+                            <div class="menu-title">返回首页</div>
+                            <div class="menu-desc">回到主应用首页</div>
+                        </div>
+                        <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                    </div>
+                    <div class="menu-item" onclick="goToApp('profile')">
+                        <div class="menu-icon" style="background:rgba(168,85,247,0.1);color:#a855f7;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="menu-text">
+                            <div class="menu-title">个人主页</div>
+                            <div class="menu-desc">查看播放记录、歌单、积分兑换</div>
+                        </div>
+                        <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                    </div>
+                    <div class="menu-item" onclick="goToApp('settings')">
+                        <div class="menu-icon" style="background:rgba(107,114,128,0.1);color:#6b7280;">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <div class="menu-text">
+                            <div class="menu-title">设置</div>
+                            <div class="menu-desc">播放、缓存、界面设置</div>
+                        </div>
+                        <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                    </div>
+                </div>
+
+                <!-- 功能菜单 - 账号管理 -->
+                <div class="menu-section">
+                    <div class="menu-section-title">账号管理</div>
+                    <div class="menu-item" onclick="showClearDataConfirm()">
+                        <div class="menu-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;">
+                            <i class="fas fa-broom"></i>
+                        </div>
+                        <div class="menu-text">
+                            <div class="menu-title">清除本地数据</div>
+                            <div class="menu-desc">清除缓存的播放记录和设置</div>
+                        </div>
+                        <div class="menu-arrow"><i class="fas fa-chevron-right"></i></div>
+                    </div>
+                </div>
+
+                <div class="version-info">零柒零音乐 v2.0 · 用户中心</div>
+            </section>
+
+            <!-- Tab: 积分 -->
+            <section class="content-panel" id="panel-points">
+                <div class="panel-header">
+                    <h1 class="panel-title"><i class="fas fa-coins"></i> 积分</h1>
+                    <p class="panel-subtitle">管理积分、兑换会员与查看历史</p>
+                </div>
+
+                <!-- 积分总览 -->
+                <div class="content-panel-card">
+                    <div class="card-title">积分总览</div>
+                    <div class="points-grid">
+                        <div class="points-item" style="background:rgba(var(--accent-rgb),0.15);color:var(--text);">
+                            <div class="points-num" id="pointsOverviewNormal">0</div>
+                            <div class="points-label" style="color:var(--text-secondary);">普通积分</div>
+                        </div>
+                        <div class="points-item" style="background:rgba(var(--accent-rgb),0.15);color:var(--text);">
+                            <div class="points-num" id="pointsOverviewVip">0</div>
+                            <div class="points-label" style="color:var(--text-secondary);">会员积分</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 积分密钥兑换 -->
+                <div class="content-panel-card">
+                    <div class="card-title">兑换积分密钥</div>
+                    <div style="background:rgba(255,255,255,0.08);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:10px;padding:16px;border:1px solid rgba(255,255,255,0.1);margin-bottom:0;">
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+                            <input type="text" id="redeemCodeInput" placeholder="请输入积分密钥" style="flex:1;min-width:200px;padding:12px 14px;border:2px solid rgba(255,255,255,0.2);border-radius:10px;font-size:13px;background:rgba(255,255,255,0.05);color:var(--text-primary);outline:none;transition:all .3s ease;font-family:'Monaco','Menlo',monospace;"/>
+                            <button class="btn-primary" id="redeemBtn" onclick="redeemCode()" style="padding:12px 24px;border-radius:10px;font-size:13px;font-weight:500;background:linear-gradient(135deg,var(--accent-color),var(--accent-dark));color:var(--accent-text);border:2px solid rgba(0,0,0,0.2);cursor:pointer;transition:all .3s ease;display:flex;align-items:center;gap:6px;box-shadow:0 3px 10px rgba(var(--accent-rgb),0.3);"><i class="fas fa-gift"></i> 兑换</button>
+                        </div>
+                        <div id="redeemMessage" style="margin-top:10px;padding:10px;border-radius:8px;display:none;font-size:13px;text-align:center;"></div>
+                    </div>
+                </div>
+
+                <!-- 积分兑换会员 -->
+                <div class="content-panel-card" id="membershipRedeemCard">
+                    <div class="card-title" style="display:flex;align-items:center;gap:8px;"><i class="fas fa-crown" style="color:var(--accent-color);"></i> 积分兑换会员</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;" id="membershipOptions">
+                        <div class="membership-option" data-days="7" onclick="selectMembershipOption(this, 7, 100)">
+                            <div class="membership-option-days">7天</div>
+                            <div class="membership-option-cost">100 积分</div>
+                        </div>
+                        <div class="membership-option" data-days="30" onclick="selectMembershipOption(this, 30, 350)">
+                            <div class="membership-option-days">30天</div>
+                            <div class="membership-option-cost">350 积分</div>
+                        </div>
+                        <div class="membership-option" data-days="90" onclick="selectMembershipOption(this, 90, 900)">
+                            <div class="membership-option-days">90天</div>
+                            <div class="membership-option-cost">900 积分</div>
+                        </div>
+                        <div class="membership-option" data-days="365" onclick="selectMembershipOption(this, 365, 3000)">
+                            <div class="membership-option-days">365天</div>
+                            <div class="membership-option-cost">3000 积分</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <select id="membershipPointType" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;">
+                            <option value="normal">普通积分</option>
+                            <option value="vip">会员积分</option>
+                        </select>
+                        <button id="redeemMembershipBtn" onclick="redeemMembership()" style="flex:1;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;background:linear-gradient(135deg,var(--accent-color),var(--accent-dark));color:var(--accent-text);border:none;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 3px 10px rgba(var(--accent-rgb),0.3);">
+                            <i class="fas fa-crown"></i> 兑换会员
+                        </button>
+                    </div>
+                    <div id="membershipMessage" style="margin-top:10px;padding:10px;border-radius:8px;display:none;font-size:13px;text-align:center;"></div>
+                </div>
+
+                <!-- 积分历史列表 -->
+                <div class="content-panel-card">
+                    <div class="card-title">积分历史</div>
+                    <div id="pointsHistoryList">
+                        <div class="empty-state">
+                            <i class="fas fa-coins"></i>
+                            <p>加载中...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: 播放历史 -->
+            <section class="content-panel" id="panel-history">
+                <div class="panel-header">
+                    <h1 class="panel-title"><i class="fas fa-history"></i> 播放历史</h1>
+                    <p class="panel-subtitle">最近播放的歌曲记录</p>
+                </div>
+
+                <div class="content-panel-card">
+                    <div class="card-title">播放记录</div>
+                    <div id="playHistoryList">
+                        <div class="empty-state">
+                            <i class="fas fa-history"></i>
+                            <p>加载中...</p>
+                        </div>
+                    </div>
+                    <button class="play-history-clear-btn" id="clearHistoryBtn" style="display:none;" onclick="showClearHistoryConfirm()">
+                        <i class="fas fa-trash-alt"></i> 清空播放历史
+                    </button>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- 退出确认弹窗 -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal-box">
+            <div class="modal-title">确认退出？</div>
+            <div class="modal-desc">退出后需要重新登录才能同步数据</div>
+            <div class="modal-btns">
+                <button class="modal-btn cancel" onclick="closeModal('logoutModal')">取消</button>
+                <button class="modal-btn confirm" onclick="confirmLogout()">退出</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 清除数据确认弹窗 -->
+    <div class="modal-overlay" id="clearDataModal">
+        <div class="modal-box">
+            <div class="modal-title">清除本地数据？</div>
+            <div class="modal-desc">将清除播放记录、搜索历史等缓存数据，账号信息不会丢失</div>
+            <div class="modal-btns">
+                <button class="modal-btn cancel" onclick="closeModal('clearDataModal')">取消</button>
+                <button class="modal-btn confirm" style="background:#f59e0b;" onclick="confirmClearData()">清除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 清空播放历史确认弹窗 -->
+    <div class="modal-overlay" id="clearHistoryModal">
+        <div class="modal-box">
+            <div class="modal-title">清空播放历史？</div>
+            <div class="modal-desc">此操作不可恢复，所有播放记录将被清除</div>
+            <div class="modal-btns">
+                <button class="modal-btn cancel" onclick="closeModal('clearHistoryModal')">取消</button>
+                <button class="modal-btn confirm" style="background:#f59e0b;" onclick="confirmClearHistory()">清空</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== 配置 =====
+        const SUPABASE_URL = "https://yeogthpysbqgehjkayaf.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_WoO50Mbz0Rhfy0nPugE3vA_5UP__SYX";
+        const STORAGE_KEY = "vipUser";
+
+        let supabaseClient = null;
+
+        // ===== 主题配置（与主应用一致） =====
+        const colorSchemes = {
+            light: [
+                { id: 'default', name: '纯白', class: 'color-scheme-light-default' },
+                { id: 'warm', name: '米白', class: 'color-scheme-light-warm' },
+                { id: 'gray', name: '浅灰', class: 'color-scheme-light-gray' },
+                { id: 'blue', name: '淡蓝', class: 'color-scheme-light-blue' }
+            ],
+            dark: [
+                { id: 'default', name: '深灰', class: 'color-scheme-dark-default' },
+                { id: 'deep', name: '暗黑', class: 'color-scheme-dark-deep' },
+                { id: 'slate', name: '灰蓝', class: 'color-scheme-dark-slate' },
+                { id: 'navy', name: '深蓝', class: 'color-scheme-dark-navy' }
+            ]
+        };
+
+        let currentTheme = 'dark0';
+        let starBgStars = [];
+        let starAnimationId = null;
+        let pointsData = null; // 缓存积分数据
+
+        // 面板标题映射
+        const panelTitles = {
+            'account': '账号',
+            'points': '积分',
+            'history': '播放历史'
+        };
+
+        // ===== 彩虹条滚动动画（绕过 prefers-reduced-motion） =====
+        function initRainbowScroll() {
+            const decor = document.querySelector('.sidebar-header-decor');
+            if (!decor) return;
+            let position = 0;
+            const speed = 0.5;
+            let animFrame = null;
+
+            function step() {
+                position = (position + speed) % 200;
+                decor.style.backgroundPosition = `${position}% 0%`;
+                animFrame = requestAnimationFrame(step);
+            }
+            animFrame = requestAnimationFrame(step);
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (animFrame) cancelAnimationFrame(animFrame);
+                } else {
+                    animFrame = requestAnimationFrame(step);
+                }
+            });
+        }
+
+        // ===== 初始化 =====
+        document.addEventListener('DOMContentLoaded', () => {
+            initRainbowScroll();
+            initTheme();
+            initSidebar();
+            checkLoginState();
+        });
+
+        // ===== Supabase 初始化 =====
+        async function initSupabase() {
+            if (supabaseClient) return supabaseClient;
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                auth: { storage: { getItem:()=>null, setItem:()=>{}, removeItem:()=>{} }, autoRefreshToken: false, persistSession: false },
+                global: { headers: { 'X-Client-Info': 'zero-seven-zero-music', 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } }
+            });
+            return supabaseClient;
+        }
+
+        // ===== 设置读写（与主应用一致） =====
+        function getSetting(key) {
+            const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+            const settingsKey = isLoggedIn ? 'user_setting' : 'guest_settings';
+            const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+            return settings[key];
+        }
+
+        function setSetting(key, value) {
+            const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+            const settingsKey = isLoggedIn ? 'user_setting' : 'guest_settings';
+            const settings = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+            settings[key] = value;
+            localStorage.setItem(settingsKey, JSON.stringify(settings));
+        }
+
+        // ===== 侧边栏初始化 =====
+        function initSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const hamburger = document.getElementById('hamburgerBtn');
+
+            hamburger.addEventListener('click', () => {
+                if (sidebar.classList.contains('open')) {
+                    closeSidebar();
+                } else {
+                    openSidebar();
+                }
+            });
+
+            overlay.addEventListener('click', closeSidebar);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                    closeSidebar();
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 768 && sidebar.classList.contains('open')) {
+                    closeSidebar();
+                }
+            });
+        }
+
+        function openSidebar() {
+            document.getElementById('sidebar').classList.add('open');
+            document.getElementById('sidebarOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.remove('open');
+            document.getElementById('sidebarOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // ===== Tab 切换 =====
+        function switchTab(panelName, clickedItem) {
+            // 更新导航项激活状态
+            const allNavItems = document.querySelectorAll('.sidebar-nav-item[data-panel]');
+            if (clickedItem) {
+                allNavItems.forEach(item => item.classList.remove('active'));
+                clickedItem.classList.add('active');
+            } else {
+                allNavItems.forEach(item => {
+                    if (item.getAttribute('data-panel') === panelName) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+
+            // 切换内容面板
+            const allPanels = document.querySelectorAll('.content-panel');
+            const targetPanel = document.getElementById('panel-' + panelName);
+            if (targetPanel) {
+                allPanels.forEach(panel => panel.classList.remove('active'));
+                targetPanel.classList.add('active');
+            }
+
+            // 更新顶部栏标题
+            const topBarTitle = document.getElementById('topBarTitle');
+            if (topBarTitle && panelTitles[panelName]) {
+                topBarTitle.textContent = panelTitles[panelName];
+            }
+
+            // 移动端关闭侧边栏
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+
+            // 滚动到顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // 懒加载数据
+            if (panelName === 'points') {
+                loadPointsHistory();
+            }
+            if (panelName === 'history') {
+                loadPlayHistory();
+            }
+        }
+
+        // ===== 主题标识解析 =====
+        function parseThemeString(themeStr) {
+            if (!themeStr) return { mode: 'dark', schemeId: 'default' };
+            if (themeStr === 'star' || themeStr.startsWith('star')) {
+                return { mode: 'star', schemeId: null };
+            }
+            const match = themeStr.match(/^(light|dark)(\d+)$/);
+            if (match) {
+                const mode = match[1];
+                const schemeIndex = parseInt(match[2]);
+                const schemes = colorSchemes[mode];
+                const scheme = schemes[schemeIndex] || schemes[0];
+                return { mode, schemeId: scheme.id };
+            }
+            if (themeStr === 'light') return { mode: 'light', schemeId: 'default' };
+            if (themeStr === 'dark') return { mode: 'dark', schemeId: 'default' };
+            return { mode: 'dark', schemeId: 'default' };
+        }
+
+        // ===== 初始化主题 =====
+        function initTheme() {
+            let savedTheme = getSetting('theme');
+            if (!savedTheme) savedTheme = 'dark0';
+
+            // 兼容旧版
+            if (savedTheme === 'star') savedTheme = 'star0';
+            if (savedTheme === 'light') savedTheme = 'light0';
+            if (savedTheme === 'dark') savedTheme = 'dark0';
+
+            currentTheme = savedTheme;
+            applyTheme(savedTheme);
+            updateThemeButtons();
+        }
+
+        // ===== 应用主题 =====
+        let starInitialized = false;
+
+        function applyTheme(themeStr) {
+            const parsed = parseThemeString(themeStr);
+            const htmlEl = document.documentElement;
+
+            const allSchemeClasses = [
+                ...colorSchemes.light.map(s => s.class),
+                ...colorSchemes.dark.map(s => s.class)
+            ];
+            htmlEl.classList.remove(...allSchemeClasses, 'dark-theme', 'star-bg-active');
+
+            if (parsed.mode === 'star') {
+                htmlEl.classList.add('dark-theme', 'star-bg-active');
+                if (!starInitialized) {
+                    initStarAnimation();
+                    starInitialized = true;
+                }
+            } else if (parsed.mode === 'dark') {
+                htmlEl.classList.add('dark-theme');
+                const scheme = colorSchemes.dark.find(s => s.id === parsed.schemeId) || colorSchemes.dark[0];
+                htmlEl.classList.add(scheme.class);
+            } else {
+                const scheme = colorSchemes.light.find(s => s.id === parsed.schemeId) || colorSchemes.light[0];
+                htmlEl.classList.add(scheme.class);
+            }
+        }
+
+        // ===== 切换主题 =====
+        function switchTheme(mode) {
+            let newTheme;
+            const parsed = parseThemeString(currentTheme);
+
+            if (mode === 'star') {
+                if (parsed.mode === 'star') return;
+                newTheme = 'star';
+                showToast('星空主题已启用', 'success');
+            } else if (mode === 'dark') {
+                if (parsed.mode === 'dark') return;
+                const schemeId = localStorage.getItem('colorScheme_dark') || 'default';
+                const schemeIndex = colorSchemes.dark.findIndex(s => s.id === schemeId);
+                newTheme = `dark${schemeIndex >= 0 ? schemeIndex : 0}`;
+                showToast('深色主题已启用', 'success');
+            } else {
+                if (parsed.mode === 'light') return;
+                const schemeId = localStorage.getItem('colorScheme_light') || 'default';
+                const schemeIndex = colorSchemes.light.findIndex(s => s.id === schemeId);
+                newTheme = `light${schemeIndex >= 0 ? schemeIndex : 0}`;
+                showToast('浅色主题已启用', 'success');
+            }
+
+            currentTheme = newTheme;
+            setSetting('theme', newTheme);
+            applyTheme(newTheme);
+            updateThemeButtons();
+        }
+
+        // ===== 更新主题按钮状态 =====
+        function updateThemeButtons() {
+            const parsed = parseThemeString(currentTheme);
+            const btns = document.querySelectorAll('.sidebar-theme-btn');
+            const pill = document.getElementById('sidebarThemePill');
+
+            btns.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.theme === parsed.mode) {
+                    btn.classList.add('active');
+                    const rect = btn.getBoundingClientRect();
+                    const parentRect = btn.parentElement.getBoundingClientRect();
+                    pill.style.left = (rect.left - parentRect.left) + 'px';
+                    pill.style.width = rect.width + 'px';
+                }
+            });
+        }
+
+        // ===== 星空背景动画 =====
+        let shootingStars = [];
+
+        function initStarAnimation() {
+            const canvas = document.getElementById('starCanvas');
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                starBgStars = [];
+                const starCount = Math.floor((canvas.width * canvas.height) / 2000);
+                for (let i = 0; i < starCount; i++) {
+                    starBgStars.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        radius: Math.random() * 1.5 + 0.5,
+                        alpha: Math.random() * 0.8 + 0.2,
+                        speed: Math.random() * 0.5 + 0.1
+                    });
+                }
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            function animate() {
+                const isStarActive = document.documentElement.classList.contains('star-bg-active');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (isStarActive) {
+                    starBgStars.forEach(star => {
+                        star.alpha += (Math.random() - 0.5) * 0.02;
+                        star.alpha = Math.max(0.1, Math.min(1, star.alpha));
+                        ctx.beginPath();
+                        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+                        ctx.fill();
+                    });
+
+                    if (Math.random() < 0.005) {
+                        shootingStars.push({
+                            x: Math.random() * canvas.width,
+                            y: 0,
+                            length: Math.random() * 80 + 40,
+                            speed: Math.random() * 8 + 4,
+                            alpha: 1
+                        });
+                    }
+
+                    shootingStars = shootingStars.filter(s => s.alpha > 0);
+                    shootingStars.forEach(s => {
+                        s.x += s.speed * 0.5;
+                        s.y += s.speed;
+                        s.alpha -= 0.015;
+                        ctx.beginPath();
+                        ctx.moveTo(s.x, s.y);
+                        ctx.lineTo(s.x - s.length * 0.5, s.y - s.length);
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${s.alpha})`;
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                    });
+                }
+
+                starAnimationId = requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+        // ===== Toast 提示 =====
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // ===== 返回 =====
+        function goBack() {
+            window.location.href = './index.html';
+        }
+
+        // ===== 跳转到主应用指定页面 =====
+        function goToApp(page) {
+            localStorage.setItem('navigateTo', page);
+            window.location.href = './index.html';
+        }
+
+        // ===== 检查登录状态 =====
+        function checkLoginState() {
+            const loggedIn = localStorage.getItem('userLoggedIn') === 'true';
+            const userData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+            if (loggedIn && userData.username) {
+                showLoggedInState(userData);
+            } else {
+                showAuthState();
+            }
+        }
+
+        function showLoggedInState(user) {
+            // 显示已登录UI
+            document.getElementById('authSection').classList.remove('show');
+            document.getElementById('loggedInSection').classList.add('show');
+
+            // 侧边栏切换
+            document.getElementById('sidebarGuest').style.display = 'none';
+            const sidebarLoggedIn = document.getElementById('sidebarLoggedIn');
+            sidebarLoggedIn.style.display = 'flex';
+
+            // 退出按钮显示
+            document.getElementById('sidebarLogoutBtn').style.display = 'flex';
+
+            // 用户名
+            document.getElementById('sidebarUserName').textContent = user.username || '用户';
+
+            // 头像
+            const avatarWrapper = document.querySelector('.sidebar-avatar-wrapper');
+            const avatarEl = document.getElementById('sidebarAvatar');
+            if (user.avatar_url) {
+                avatarEl.innerHTML = `<img src="${user.avatar_url}" alt="avatar" />`;
+            } else {
+                avatarEl.innerHTML = `<i class="fas fa-user"></i>`;
+            }
+
+            // 会员头像金色边框
+            if (avatarWrapper) {
+                if (user.is_permanent_member || user.is_member) {
+                    avatarWrapper.classList.add('vip');
+                } else {
+                    avatarWrapper.classList.remove('vip');
+                }
+            }
+
+            // 会员状态
+            const roleEl = document.getElementById('sidebarUserRole');
+            if (user.is_permanent_member) {
+                roleEl.textContent = '✨ 永久会员';
+            } else if (user.is_member) {
+                const days = user.member_days_remaining || 0;
+                roleEl.textContent = `✨ 会员 · ${days}天`;
+            } else {
+                roleEl.textContent = '普通用户';
+            }
+
+            // 加载统计数据
+            loadUserStats();
+        }
+
+        function showAuthState() {
+            document.getElementById('authSection').classList.add('show');
+            document.getElementById('loggedInSection').classList.remove('show');
+
+            // 侧边栏切换
+            document.getElementById('sidebarGuest').style.display = 'flex';
+            document.getElementById('sidebarLoggedIn').style.display = 'none';
+            document.getElementById('sidebarLogoutBtn').style.display = 'none';
+        }
+
+        // ===== 加载用户统计 =====
+        async function loadUserStats() {
+            try {
+                await initSupabase();
+                const sessionToken = localStorage.getItem('sessionToken');
+                if (!sessionToken) return;
+
+                // 播放统计
+                const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+                let plays;
+                if (isLoggedIn) {
+                    plays = JSON.parse(localStorage.getItem('user_plays') || '{}');
+                } else {
+                    const settings = JSON.parse(localStorage.getItem('guest_settings') || '{}');
+                    plays = settings.plays || {};
+                }
+
+                const totalPlays = plays.playHistory ? plays.playHistory.length : 0;
+                const totalPlayTime = plays.totalPlayTime || 0;
+                document.getElementById('statPlays').textContent = totalPlays;
+                document.getElementById('statTime').textContent = formatPlayTime(totalPlayTime);
+
+                // 侧边栏统计
+                document.getElementById('sidebarStatPlays').textContent = totalPlays;
+                document.getElementById('sidebarStatHistory').textContent = totalPlays;
+
+                // 积分
+                const userId = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').id;
+                const { data: pData } = await supabaseClient.rpc('get_user_points', { _user_id: userId, _session_token: sessionToken });
+                if (pData && pData.success !== false) {
+                    const normalPts = pData.normal_points || pData.total_points || 0;
+                    const vipPts = pData.vip_points || 0;
+                    document.getElementById('pointsNormal').textContent = normalPts;
+                    document.getElementById('pointsVip').textContent = vipPts;
+                    document.getElementById('sidebarStatPoints').textContent = formatShortNumber(normalPts);
+                    pointsData = pData; // 缓存
+                }
+            } catch (e) {
+                console.warn('加载统计失败:', e);
+            }
+        }
+
+        function formatPlayTime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            if (seconds < 60) return seconds + '秒';
+            if (seconds < 3600) return Math.floor(seconds / 60) + '分钟';
+            return (seconds / 3600).toFixed(1) + '小时';
+        }
+
+        // Helper to truncate numbers to first 4 digits
+        function formatShortNumber(num) {
+            const str = String(num);
+            if (str.length <= 4) return str;
+            return str.slice(0, 4) + '...';
+        }
+
+        // ===== 加载积分记录 =====
+        async function loadPointsHistory() {
+            const listEl = document.getElementById('pointsHistoryList');
+
+            try {
+                await initSupabase();
+                const sessionToken = localStorage.getItem('sessionToken');
+                if (!sessionToken) {
+                    listEl.innerHTML = '<div class="empty-state"><i class="fas fa-coins"></i><p>请先登录</p></div>';
+                    return;
+                }
+
+                if (pointsData && pointsData.history) {
+                    renderPointsHistory(pointsData.history);
+                    // 更新积分总览
+                    document.getElementById('pointsOverviewNormal').textContent = pointsData.normal_points || pointsData.total_points || 0;
+                    document.getElementById('pointsOverviewVip').textContent = pointsData.vip_points || 0;
+                    return;
+                }
+
+                const userId = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').id;
+                const { data } = await supabaseClient.rpc('get_user_points', { _user_id: userId, _session_token: sessionToken });
+                if (data && data.success !== false) {
+                    pointsData = data;
+                    renderPointsHistory(data.history || []);
+                    document.getElementById('pointsOverviewNormal').textContent = data.normal_points || data.total_points || 0;
+                    document.getElementById('pointsOverviewVip').textContent = data.vip_points || 0;
+                } else {
+                    listEl.innerHTML = '<div class="empty-state"><i class="fas fa-coins"></i><p>暂无积分记录</p></div>';
+                }
+            } catch (e) {
+                console.warn('加载积分记录失败:', e);
+                listEl.innerHTML = '<div class="empty-state"><i class="fas fa-coins"></i><p>加载失败，请稍后重试</p></div>';
+            }
+        }
+
+        function renderPointsHistory(history) {
+            const listEl = document.getElementById('pointsHistoryList');
+
+            if (!history || history.length === 0) {
+                listEl.innerHTML = '<div class="empty-state"><i class="fas fa-coins"></i><p>暂无积分记录</p></div>';
+                return;
+            }
+
+            // 按时间从新到旧排序
+            const sorted = [...history].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const display = sorted.slice(0, 30); // 最近30条
+
+            listEl.innerHTML = display.map(item => {
+                const date = new Date(item.created_at);
+                const formattedDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+                const isPositive = item.points > 0;
+                const sign = isPositive ? '+' : '';
+                const cls = isPositive ? 'positive' : 'negative';
+
+                return `
+                    <div class="points-history-item">
+                        <div>
+                            <div class="points-history-reason">${escapeHTML(item.reason || '积分变动')}</div>
+                            <div class="points-history-time">${formattedDate}</div>
+                        </div>
+                        <div class="points-history-points ${cls}">${sign}${item.points}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== 加载播放历史 =====
+        function loadPlayHistory() {
+            const listEl = document.getElementById('playHistoryList');
+            const clearBtn = document.getElementById('clearHistoryBtn');
+
+            const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+            let plays;
+            if (isLoggedIn) {
+                plays = JSON.parse(localStorage.getItem('user_plays') || '{}');
+            } else {
+                const settings = JSON.parse(localStorage.getItem('guest_settings') || '{}');
+                plays = settings.plays || {};
+            }
+
+            const history = plays.playHistory || [];
+
+            if (history.length === 0) {
+                listEl.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>暂无播放记录</p></div>';
+                clearBtn.style.display = 'none';
+                return;
+            }
+
+            clearBtn.style.display = 'flex';
+
+            listEl.innerHTML = history.map((song, idx) => {
+                const platformMap = { 'wy': '网易云', 'bili': 'B站', 'qq': 'QQ音乐' };
+                const platformName = platformMap[song.platform] || song.platform || '未知';
+                const coverHtml = song.pic
+                    ? `<img src="${song.pic.startsWith('http') ? (song.pic.startsWith('https') ? song.pic : song.pic.replace('http://','https://')) : ''}" alt="" onerror="this.onerror=null;this.parentElement.innerHTML='<i class=\\'fas fa-music\\'></i>';">`
+                    : '<i class="fas fa-music"></i>';
+
+                return `
+                    <div class="play-history-item">
+                        <div class="play-history-cover">${coverHtml}</div>
+                        <div class="play-history-info">
+                            <div class="play-history-name">${escapeHTML(song.name || '未知歌曲')}</div>
+                            <div class="play-history-artist">${escapeHTML(song.artist || '未知艺术家')}</div>
+                        </div>
+                        <div class="play-history-platform">${platformName}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== HTML 转义 =====
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ===== 清空播放历史 =====
+        function showClearHistoryConfirm() {
+            document.getElementById('clearHistoryModal').classList.add('show');
+        }
+
+        function confirmClearHistory() {
+            const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+            if (isLoggedIn) {
+                const plays = JSON.parse(localStorage.getItem('user_plays') || '{}');
+                plays.playHistory = [];
+                localStorage.setItem('user_plays', JSON.stringify(plays));
+            } else {
+                const settings = JSON.parse(localStorage.getItem('guest_settings') || '{}');
+                if (settings.plays) {
+                    settings.plays.playHistory = [];
+                    localStorage.setItem('guest_settings', JSON.stringify(settings));
+                }
+            }
+
+            closeModal('clearHistoryModal');
+            loadPlayHistory();
+            loadUserStats(); // 刷新统计
+            showToast('播放历史已清空', 'success');
+        }
+
+        // ===== 登录/注册 Tab 切换 =====
+        function switchAuthTab(tab) {
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegister = document.getElementById('tabRegister');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+
+            hideMessages();
+
+            if (tab === 'login') {
+                tabLogin.classList.add('active');
+                tabRegister.classList.remove('active');
+                loginForm.classList.add('show');
+                registerForm.classList.remove('show');
+            } else {
+                tabLogin.classList.remove('active');
+                tabRegister.classList.add('active');
+                loginForm.classList.remove('show');
+                registerForm.classList.add('show');
+            }
+        }
+
+        // ===== 消息提示 =====
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 4000);
+        }
+
+        function showSuccess(msg) {
+            const el = document.getElementById('successMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMsg').classList.remove('show');
+            document.getElementById('successMsg').classList.remove('show');
+        }
+
+        // ===== 登录 =====
+        async function handleLogin(e) {
+            e.preventDefault();
+            hideMessages();
+
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const btn = document.getElementById('loginBtn');
+
+            if (!username || !password) {
+                showError('请输入用户名和密码');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>登录中...';
+
+            try {
+                await initSupabase();
+                const { data, error } = await supabaseClient.rpc('verify_vip_user', { _username: username, _password: password });
+
+                if (error) throw new Error(`登录失败: ${error.message}`);
+                if (!data || !data.success) {
+                    const errorMsg = data?.error;
+                    if (errorMsg === 'USER_BANNED') throw new Error('您的账号已被封禁，无法登录。');
+                    throw new Error(errorMsg === 'USER_NOT_FOUND' ? '用户名不存在' : errorMsg === 'INVALID_PASSWORD' ? '密码错误' : '用户名或密码错误');
+                }
+
+                saveLoginData(data);
+                migrateGuestSettings();
+
+                btn.innerHTML = '<i class="fas fa-check"></i> 登录成功!';
+                setTimeout(() => {
+                    pointsData = null; // 重置积分缓存
+                    checkLoginState();
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登录';
+                }, 800);
+
+            } catch (err) {
+                showError(err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> 登录';
+            }
+        }
+
+        // ===== 保存登录数据 =====
+        function saveLoginData(data) {
+            localStorage.setItem('sessionToken', data.session_token);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                id: data.user_id,
+                username: data.username,
+                avatar_url: data.avatar_url || '',
+                is_member: data.is_member || false,
+                is_permanent_member: data.is_permanent_member || false,
+                member_days_remaining: data.member_days_remaining || 0,
+                member_end_time: data.member_end_time || null
+            }));
+            localStorage.setItem('userLoggedIn', 'true');
+            localStorage.setItem('username', data.username);
+            if (data.avatar_url) localStorage.setItem('userAvatar', data.avatar_url);
+        }
+
+        // ===== 迁移游客设置 =====
+        function migrateGuestSettings() {
+            const guestSettings = JSON.parse(localStorage.getItem('guest_settings') || '{}');
+            let userSettings = JSON.parse(localStorage.getItem('user_setting') || '{}');
+
+            if (!userSettings.theme && guestSettings.theme) {
+                userSettings = { ...guestSettings };
+                delete userSettings.plays;
+                localStorage.setItem('user_setting', JSON.stringify(userSettings));
+            }
+
+            if (guestSettings.plays && !localStorage.getItem('user_plays')) {
+                localStorage.setItem('user_plays', JSON.stringify(guestSettings.plays));
+            }
+        }
+
+        // ===== 注册 =====
+        async function handleRegister(e) {
+            e.preventDefault();
+            hideMessages();
+
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+            const confirmPwd = document.getElementById('regConfirmPwd').value.trim();
+            const secretKey = document.getElementById('regSecretKey').value.trim();
+            const btn = document.getElementById('regBtn');
+
+            if (!username || !password || !confirmPwd || !secretKey) {
+                showError('请填写所有字段');
+                return;
+            }
+            if (username.length < 1 || username.length > 15) {
+                showError('用户名长度1-15个字符');
+                return;
+            }
+            if (!/^[a-zA-Z0-9\u4e00-\u9fa5]+$/.test(username)) {
+                showError('用户名只能包含字母、数字和中文');
+                return;
+            }
+            if (password.length < 6 || password.length > 20) {
+                showError('密码长度6-20位');
+                return;
+            }
+            if (password !== confirmPwd) {
+                showError('两次输入的密码不一致');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>注册中...';
+
+            try {
+                await initSupabase();
+                const { data, error } = await supabaseClient.rpc('create_vip_user', { _username: username, _password: password, _key: secretKey });
+
+                if (error) throw new Error(`注册失败: ${error.message}`);
+                if (!data || !data.success) throw new Error(data?.error || '无效的密钥，请联系管理员获取');
+
+                saveLoginData(data);
+                migrateGuestSettings();
+
+                btn.innerHTML = '<i class="fas fa-check"></i> 注册成功!';
+                setTimeout(() => {
+                    pointsData = null;
+                    checkLoginState();
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-user-plus"></i> 注册';
+                }, 800);
+
+            } catch (err) {
+                showError(err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> 注册';
+            }
+        }
+
+        // ===== 头像上传 =====
+        function triggerAvatarUpload() {
+            document.getElementById('avatarFileInput').click();
+        }
+
+        async function handleAvatarUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                await initSupabase();
+                const sessionToken = localStorage.getItem('sessionToken');
+                if (!sessionToken) return;
+
+                const fileExt = file.name.split('.').pop();
+                const fileName = `avatar_${Date.now()}.${fileExt}`;
+
+                const { error: uploadError } = await supabaseClient.storage
+                    .from('avatars')
+                    .upload(fileName, file, { upsert: true });
+
+                if (uploadError) throw uploadError;
+
+                const { data: urlData } = supabaseClient.storage.from('avatars').getPublicUrl(fileName);
+                const avatarUrl = urlData.publicUrl;
+
+                const { error: updateError } = await supabaseClient.rpc('update_user_avatar', {
+                    _token: sessionToken,
+                    _avatar_url: avatarUrl
+                });
+
+                if (updateError) throw updateError;
+
+                // 更新本地存储
+                const userData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                userData.avatar_url = avatarUrl;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+                localStorage.setItem('userAvatar', avatarUrl);
+
+                // 更新显示
+                const avatarEl = document.getElementById('sidebarAvatar');
+                avatarEl.innerHTML = `<img src="${avatarUrl}" alt="avatar" />`;
+
+                showToast('头像更新成功', 'success');
+
+            } catch (err) {
+                console.error('头像上传失败:', err);
+                showToast('头像上传失败: ' + err.message, 'error');
+            }
+        }
+
+        // ===== 弹窗控制 =====
+        function showLogoutConfirm() {
+            document.getElementById('logoutModal').classList.add('show');
+        }
+
+        function showClearDataConfirm() {
+            document.getElementById('clearDataModal').classList.add('show');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        // ===== 退出登录 =====
+        function confirmLogout() {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem('userLoggedIn');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userAvatar');
+            localStorage.removeItem('sessionToken');
+            localStorage.removeItem('user_setting');
+            localStorage.removeItem('user_plays');
+            localStorage.removeItem('user_points');
+            localStorage.removeItem('user_avatar_history');
+
+            closeModal('logoutModal');
+            pointsData = null;
+            showAuthState();
+            showToast('已退出登录', 'success');
+        }
+
+        // ===== 积分密钥兑换 =====
+        async function redeemCode() {
+            const input = document.getElementById('redeemCodeInput');
+            const msgEl = document.getElementById('redeemMessage');
+            const btn = document.getElementById('redeemBtn');
+            const code = input.value.trim();
+
+            if (!code) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(220,38,38,0.1)';
+                msgEl.style.color = '#dc2626';
+                msgEl.textContent = '请输入积分密钥';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>兑换中...';
+            msgEl.style.display = 'none';
+
+            try {
+                await initSupabase();
+                const sessionToken = localStorage.getItem('sessionToken');
+                if (!sessionToken) {
+                    throw new Error('请先登录');
+                }
+
+                const { data, error } = await supabaseClient.rpc('redeem_code', {
+                    _session_token: sessionToken,
+                    _code: code
+                });
+
+                if (error) throw new Error(error.message || '兑换失败');
+                if (!data || !data.success) {
+                    const errMap = {
+                        'SESSION_EXPIRED': '登录已过期，请重新登录',
+                        'INVALID_CODE': '无效的积分密钥',
+                        'CODE_EXHAUSTED': '该密钥已被使用完',
+                        'ALREADY_REDEEMED': '您已兑换过该密钥'
+                    };
+                    throw new Error(errMap[data?.error] || data?.error || '兑换失败');
+                }
+
+                const earned = data.points || 0;
+                const type = data.point_type || 'normal';
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(34,197,94,0.1)';
+                msgEl.style.color = '#16a34a';
+                msgEl.textContent = `兑换成功！获得 ${type === 'vip' ? '会员' : '普通'}积分 +${earned}`;
+
+                input.value = '';
+                pointsData = null; // 清除缓存以刷新
+                loadUserStats();
+
+            } catch (err) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(220,38,38,0.1)';
+                msgEl.style.color = '#dc2626';
+                msgEl.textContent = err.message || '兑换失败，请检查密钥';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-gift"></i> 兑换';
+            }
+        }
+
+        // ===== 积分兑换会员 =====
+        let selectedMembershipDays = 0;
+        let selectedMembershipCost = 0;
+
+        function selectMembershipOption(el, days, cost) {
+            document.querySelectorAll('.membership-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedMembershipDays = days;
+            selectedMembershipCost = cost;
+        }
+
+        async function redeemMembership() {
+            const msgEl = document.getElementById('membershipMessage');
+            const btn = document.getElementById('redeemMembershipBtn');
+            const pointType = document.getElementById('membershipPointType').value;
+
+            if (!selectedMembershipDays) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(220,38,38,0.1)';
+                msgEl.style.color = '#dc2626';
+                msgEl.textContent = '请先选择会员时长';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>兑换中...';
+            msgEl.style.display = 'none';
+
+            try {
+                await initSupabase();
+                const sessionToken = localStorage.getItem('sessionToken');
+                if (!sessionToken) throw new Error('请先登录');
+
+                const userId = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}').id;
+                const { data, error } = await supabaseClient.rpc('user_redeem_membership', {
+                    _user_id: userId,
+                    _days: selectedMembershipDays,
+                    _point_type: pointType,
+                    _session_token: sessionToken
+                });
+
+                if (error) throw new Error(error.message || '兑换失败');
+                if (!data || !data.success) {
+                    const errMap = {
+                        'INVALID_DAYS': '无效的会员时长',
+                        'INSUFFICIENT_POINTS': '普通积分不足，还需更多积分',
+                        'INSUFFICIENT_VIP_POINTS': '会员积分不足，还需更多积分'
+                    };
+                    throw new Error(errMap[data?.error] || data?.error || '兑换失败');
+                }
+
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(34,197,94,0.1)';
+                msgEl.style.color = '#16a34a';
+                msgEl.textContent = `兑换成功！已获得 ${data.days_added} 天会员，消耗 ${data.points_spent} 积分`;
+
+                // 清除选中状态
+                document.querySelectorAll('.membership-option').forEach(opt => opt.classList.remove('selected'));
+                selectedMembershipDays = 0;
+                selectedMembershipCost = 0;
+
+                // 刷新数据：清除缓存后重新加载积分余额和记录
+                pointsData = null;
+                loadUserStats();
+                loadPointsHistory();
+
+                // 更新侧边栏会员状态
+                const userData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                if (userData) {
+                    const { data: statusData } = await supabaseClient.rpc('check_membership_status', {
+                        _user_id: userId,
+                        _session_token: sessionToken
+                    });
+                    if (statusData && statusData.is_member) {
+                        userData.is_member = true;
+                        userData.is_permanent_member = statusData.is_permanent || false;
+                        userData.member_days_remaining = statusData.days_remaining || 0;
+                        userData.member_end_time = statusData.end_time || null;
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+
+                        // 更新头像金色边框
+                        const avatarWrapper = document.querySelector('.sidebar-avatar-wrapper');
+                        if (avatarWrapper) avatarWrapper.classList.add('vip');
+
+                        const roleEl = document.getElementById('sidebarUserRole');
+                        if (userData.is_permanent_member) {
+                            roleEl.textContent = '✨ 永久会员';
+                        } else {
+                            roleEl.textContent = `✨ 会员 · ${userData.member_days_remaining}天`;
+                        }
+                    }
+                }
+
+            } catch (err) {
+                msgEl.style.display = 'block';
+                msgEl.style.background = 'rgba(220,38,38,0.1)';
+                msgEl.style.color = '#dc2626';
+                msgEl.textContent = err.message || '兑换失败';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-crown"></i> 兑换会员';
+            }
+        }
+
+        // ===== 清除本地数据 =====
+        function confirmClearData() {
+            localStorage.removeItem('user_plays');
+            localStorage.removeItem('playHistory');
+            localStorage.removeItem('searchHistory');
+            localStorage.removeItem('songDetailsCache');
+            localStorage.removeItem('myPlaylists');
+
+            const guestSettings = JSON.parse(localStorage.getItem('guest_settings') || '{}');
+            if (guestSettings.plays) {
+                guestSettings.plays = { totalPlayTime: 0, playHistory: [], searchHistory: [] };
+                localStorage.setItem('guest_settings', JSON.stringify(guestSettings));
+            }
+
+            closeModal('clearDataModal');
+            loadUserStats();
+            showToast('本地数据已清除', 'success');
+        }
+    </script>
+</body>
+</html>
