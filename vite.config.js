@@ -16,12 +16,19 @@ function userCenterPlugin() {
         // 所以 /lql/usercenter 变成 /usercenter
         if (req.url === '/usercenter' || req.url === '/usercenter/' ||
             req.url === '/lql/usercenter' || req.url === '/lql/usercenter/') {
-          const filePath = resolve(__dirname, 'dist/usercenter/index.html')
-          if (existsSync(filePath)) {
-            const html = readFileSync(filePath, 'utf-8')
-            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-            res.end(html)
-            return
+          // 优先 public（构建安全），其次 dist，再次 others
+          const candidates = [
+            resolve(__dirname, 'public/usercenter/index.html'),
+            resolve(__dirname, 'dist/usercenter/index.html'),
+            resolve(__dirname, 'others/user-center.html')
+          ]
+          for (const filePath of candidates) {
+            if (existsSync(filePath)) {
+              const html = readFileSync(filePath, 'utf-8')
+              res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+              res.end(html)
+              return
+            }
           }
         }
         next()

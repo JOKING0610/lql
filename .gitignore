@@ -1,5 +1,6 @@
 node_modules/
 dist/
 others/
+.workbuddy/
 .DS_Store
 *.log

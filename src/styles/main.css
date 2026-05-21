@@ -2060,14 +2060,24 @@
             text-shadow: none !important;
         }
         
+        /* 积分兑换输入框默认样式（深色主题） */
+        #redeemCodeInput,
+        .redeem-code-input {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
         /* 浅色主题下输入框明显的边框显示 */
-        html:not(.dark-theme) #redeemCodeInput {
-            border: 2px solid rgba(0, 0, 0, 0.15) !important;
+        html:not(.dark-theme) #redeemCodeInput,
+        html:not(.dark-theme) .redeem-code-input {
+            border: 2px solid rgba(120, 120, 120, 0.5) !important;
+            background: rgba(0, 0, 0, 0.03) !important;
             outline: none !important;
         }
         
-        html:not(.dark-theme) #redeemCodeInput:focus {
-            border-color: var(--primary) !important;
+        html:not(.dark-theme) #redeemCodeInput:focus,
+        html:not(.dark-theme) .redeem-code-input:focus {
+            border-color: rgba(80, 80, 80, 0.7) !important;
             box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08) !important;
         }
 

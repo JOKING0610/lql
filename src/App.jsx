@@ -310,7 +310,7 @@ function App() {
                 </div>
                 <div style={{background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: '16px', padding: '16px', border: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '0'}}>
                   <div style={{display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center'}}>
-                    <input type="text" id="redeemCodeInput" placeholder="请输入积分密钥" style={{flex: '1', minWidth: '200px', padding: '12px 14px', border: '2px solid rgba(255, 255, 255, 0.2)', borderRadius: '10px', fontSize: '13px', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', outline: 'none', transition: 'all 0.3s ease', fontFamily: "'Monaco', 'Menlo', monospace"}} />
+                    <input type="text" id="redeemCodeInput" placeholder="请输入积分密钥" className="redeem-code-input" style={{flex: '1', minWidth: '200px', padding: '12px 14px', borderRadius: '10px', fontSize: '13px', color: 'var(--text-primary)', outline: 'none', transition: 'all 0.3s ease', fontFamily: "'Monaco', 'Menlo', monospace"}} />
                     <button className="btn-primary" id="redeemBtn" onClick={() => window.redeemCode && window.redeemCode()} style={{padding: '12px 24px', borderRadius: '10px', fontSize: '13px', fontWeight: '500', background: 'linear-gradient(135deg, var(--accent-color), var(--accent-dark))', color: 'var(--accent-text)', border: '2px solid rgba(0, 0, 0, 0.2)', cursor: 'pointer', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 3px 10px rgba(var(--accent-rgb), 0.3)'}}>
                       <i className="fas fa-gift"></i> 兑换
                     </button>
