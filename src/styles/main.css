@@ -6611,16 +6611,20 @@
             overflow: hidden;
         }
         #starCanvas {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             display: block;
             pointer-events: none;
+            z-index: 0;
         }
 
         /* 星空背景启用时的透明效果 */
+        html.star-bg-active {
+            background: #070b1a !important;
+        }
         html.star-bg-active body {
             background: transparent !important;
         }

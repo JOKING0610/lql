@@ -2549,11 +2549,28 @@
             color: var(--text-secondary);
             flex-shrink: 0;
             overflow: hidden;
+            position: relative;
         }
         .friend-avatar img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+        .friend-status {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid var(--surface-elevated);
+        }
+        .friend-status.online {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        }
+        .friend-status.offline {
+            background: #6b7280;
         }
         .friend-info {
             flex: 1;
@@ -3738,15 +3755,184 @@
         }
 
         // ===== 检查登录状态 =====
-        function checkLoginState() {
+        async function checkLoginState() {
             const loggedIn = localStorage.getItem('userLoggedIn') === 'true';
             const userData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            const sessionToken = localStorage.getItem('sessionToken');
 
-            if (loggedIn && userData.username) {
+            if (loggedIn && userData.username && sessionToken) {
+                try {
+                    await initSupabase();
+                    const { data, error } = await supabaseClient.rpc('check_session_valid', {
+                        _user_id: userData.id,
+                        _session_token: sessionToken
+                    });
+
+                    if (error || !data || !data.success) {
+                        clearLoginState();
+                        showAuthState();
+                        showToast('登录状态已失效，请重新登录', 'error');
+                        return;
+                    }
+                } catch (err) {
+                    console.warn('检查会话失败（可能离线）:', err);
+                }
+
                 showLoggedInState(userData);
             } else {
                 showAuthState();
             }
+        }
+
+        function clearLoginState() {
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem('userLoggedIn');
+            localStorage.removeItem('username');
+            localStorage.removeItem('userAvatar');
+            localStorage.removeItem('sessionToken');
+            localStorage.removeItem('user_setting');
+            localStorage.removeItem('user_plays');
+            localStorage.removeItem('user_points');
+            localStorage.removeItem('user_avatar_history');
+            stopSessionCheck();
+            stopFriendListRefresh();
+            unsubscribeFromFriendsOnlineStatus();
+            pointsData = null;
+        }
+
+        // ===== 定时检测用户状态 =====
+        let sessionCheckInterval = null;
+        let friendListRefreshInterval = null;
+
+        function startSessionCheck() {
+            if (sessionCheckInterval) clearInterval(sessionCheckInterval);
+            
+            sessionCheckInterval = setInterval(async () => {
+                const loggedIn = localStorage.getItem('userLoggedIn') === 'true';
+                const userData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                const sessionToken = localStorage.getItem('sessionToken');
+
+                if (loggedIn && userData.id && sessionToken) {
+                    try {
+                        await initSupabase();
+                        
+                        await supabaseClient.rpc('update_online_time', {
+                            _user_id: userData.id,
+                            _session_token: sessionToken
+                        });
+
+                        const { data, error } = await supabaseClient.rpc('check_session_valid', {
+                            _user_id: userData.id,
+                            _session_token: sessionToken
+                        });
+
+                        if (error || !data || !data.success) {
+                            clearLoginState();
+                            showAuthState();
+                            showToast('登录已过期，请重新登录', 'error');
+                        }
+                    } catch (err) {
+                        console.warn('定时检查会话失败:', err);
+                    }
+                }
+            }, 60000);
+        }
+
+        function startFriendListRefresh() {
+            if (friendListRefreshInterval) clearInterval(friendListRefreshInterval);
+            
+            friendListRefreshInterval = setInterval(async () => {
+                const loggedIn = localStorage.getItem('userLoggedIn') === 'true';
+                if (!loggedIn) return;
+
+                const currentPanel = document.querySelector('.content-panel.show');
+                if (currentPanel && currentPanel.id === 'panel-friends') {
+                    await loadFriendsList();
+                }
+            }, 30000);
+        }
+
+        function stopFriendListRefresh() {
+            if (friendListRefreshInterval) {
+                clearInterval(friendListRefreshInterval);
+                friendListRefreshInterval = null;
+            }
+        }
+
+        function stopSessionCheck() {
+            if (sessionCheckInterval) {
+                clearInterval(sessionCheckInterval);
+                sessionCheckInterval = null;
+            }
+        }
+
+        let friendsOnlineSubscription = null;
+        let currentFriendIds = [];
+
+        async function subscribeToFriendsOnlineStatus() {
+            if (friendsOnlineSubscription) {
+                friendsOnlineSubscription.unsubscribe();
+            }
+
+            const userData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            const userId = userData.id;
+            if (!userId) return;
+
+            try {
+                await initSupabase();
+                
+                friendsOnlineSubscription = supabaseClient
+                    .channel('friends_online_status')
+                    .on('UPDATE', { schema: 'public', table: 'vip_users' }, (payload) => {
+                        handleUserUpdate(payload.new);
+                    })
+                    .subscribe((status) => {
+                        console.log('订阅状态:', status);
+                    });
+            } catch (err) {
+                console.warn('订阅好友在线状态失败:', err);
+            }
+        }
+
+        function unsubscribeFromFriendsOnlineStatus() {
+            if (friendsOnlineSubscription) {
+                friendsOnlineSubscription.unsubscribe();
+                friendsOnlineSubscription = null;
+            }
+        }
+
+        function handleUserUpdate(userData) {
+            const friendId = userData.id;
+            
+            if (!currentFriendIds.includes(friendId)) {
+                return;
+            }
+
+            updateFriendOnlineStatus(friendId, userData.last_online_time);
+        }
+
+        function updateFriendOnlineStatus(friendId, lastOnlineTime) {
+            const friendItem = document.querySelector(`.friend-item[data-id="${friendId}"]`);
+            if (!friendItem) return;
+
+            const now = Date.now();
+            const lastOnline = new Date(lastOnlineTime).getTime();
+            const isOnline = (now - lastOnline) <= 60000;
+
+            const statusEl = friendItem.querySelector('.friend-status');
+            const timeEl = friendItem.querySelector('.friend-time');
+
+            if (statusEl) {
+                statusEl.className = `friend-status ${isOnline ? 'online' : 'offline'}`;
+            }
+
+            if (timeEl) {
+                timeEl.textContent = isOnline ? '在线' : formatFriendTime(lastOnlineTime);
+            }
+        }
+
+        function updateCurrentFriendIds(friends) {
+            currentFriendIds = friends.map(f => f.friend_id);
         }
 
         function showLoggedInState(user) {
@@ -3796,6 +3982,18 @@
 
             // 加载统计数据
             loadUserStats();
+            
+            // 加载好友码
+            loadFriendCode();
+            
+            // 启动定时检测用户状态
+            startSessionCheck();
+            
+            // 启动好友列表定时刷新
+            startFriendListRefresh();
+            
+            // 启动好友在线状态实时订阅
+            subscribeToFriendsOnlineStatus();
         }
 
         function showAuthState() {
@@ -4920,6 +5118,9 @@
             localStorage.removeItem('user_points');
             localStorage.removeItem('user_avatar_history');
 
+            // 停止定时检测
+            stopSessionCheck();
+
             closeModal('logoutModal');
             pointsData = null;
             showAuthState();
@@ -5195,11 +5396,13 @@
         // ===== 好友功能 =====
         // 获取或创建好友码
         async function loadFriendCode() {
-            const userId = localStorage.getItem('userId');
             const sessionToken = localStorage.getItem('sessionToken');
+            const userData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            const userId = userData.id;
             if (!userId || !sessionToken) return;
 
             try {
+                await initSupabase();
                 const { data, error } = await supabaseClient.rpc('get_or_create_friend_code', {
                     _user_id: userId,
                     _session_token: sessionToken
@@ -5241,8 +5444,9 @@
 
         // 添加好友
         async function addFriendByCode() {
-            const userId = localStorage.getItem('userId');
             const sessionToken = localStorage.getItem('sessionToken');
+            const userData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            const userId = userData.id;
             if (!userId || !sessionToken) {
                 showToast('请先登录', 'error');
                 return;
@@ -5265,6 +5469,7 @@
             msgEl.textContent = '';
 
             try {
+                await initSupabase();
                 const { data, error } = await supabaseClient.rpc('add_friend_by_code', {
                     _user_id: userId,
                     _friend_code: code,
@@ -5294,14 +5499,16 @@
 
         // 加载好友列表
         async function loadFriendsList() {
-            const userId = localStorage.getItem('userId');
             const sessionToken = localStorage.getItem('sessionToken');
+            const userData = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            const userId = userData.id;
             if (!userId || !sessionToken) return;
 
             const listEl = document.getElementById('friendsList');
             const countEl = document.getElementById('friendCount');
 
             try {
+                await initSupabase();
                 const { data, error } = await supabaseClient.rpc('get_friends_list', {
                     _user_id: userId,
                     _session_token: sessionToken
@@ -5322,15 +5529,17 @@
                     return;
                 }
 
+                updateCurrentFriendIds(friends);
                 countEl.textContent = friends.length;
                 listEl.innerHTML = friends.map(f => `
                     <div class="friend-item" data-id="${f.friend_id}">
                         <div class="friend-avatar">
                             ${f.avatar_url ? `<img src="${f.avatar_url}" alt="">` : `<i class="fas fa-user"></i>`}
+                            <div class="friend-status ${f.is_online ? 'online' : 'offline'}"></div>
                         </div>
                         <div class="friend-info">
                             <div class="friend-name">${escapeHtml(f.username || '用户')}</div>
-                            <div class="friend-time">${formatFriendTime(f.added_at)}</div>
+                            <div class="friend-time">${f.is_online ? '在线' : formatFriendTime(f.last_online_time)}</div>
                         </div>
                         <button class="friend-remove-btn" onclick="removeFriend('${f.friend_id}')" title="删除好友">
                             <i class="fas fa-times"></i>
