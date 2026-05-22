@@ -2388,6 +2388,260 @@
         /* ===== 触控目标: 基础保障 ===== */
         .sidebar-nav-item { min-height: 44px; }
         .submit-btn { min-height: 48px; }
+
+        /* ===== 好友功能样式 ===== */
+        .friend-code-card {
+            text-align: center;
+        }
+        .friend-code-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin: 20px 0 12px;
+        }
+        .friend-code-value {
+            font-family: 'DM Sans', monospace;
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: 8px;
+            color: var(--text);
+            background: var(--surface-elevated);
+            padding: 16px 28px;
+            border-radius: 16px;
+            border: 2px solid var(--border);
+            user-select: all;
+            transition: border-color 0.2s;
+        }
+        .friend-code-value:hover {
+            border-color: var(--accent-color);
+        }
+        .friend-code-copy {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: var(--surface);
+            color: var(--text-secondary);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .friend-code-copy:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            background: var(--surface-elevated);
+            transform: translateY(-1px);
+        }
+        .friend-code-copy.copied {
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+        .friend-code-hint {
+            color: var(--text-tertiary);
+            font-size: 13px;
+            margin: 0;
+        }
+        .add-friend-form {
+            margin-top: 4px;
+        }
+        .add-friend-input-wrap {
+            display: flex;
+            gap: 10px;
+        }
+        .add-friend-input {
+            flex: 1;
+            height: 48px;
+            padding: 0 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 18px;
+            font-family: 'DM Sans', monospace;
+            letter-spacing: 4px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .add-friend-input::placeholder {
+            letter-spacing: 1px;
+            font-size: 14px;
+            color: var(--text-tertiary);
+        }
+        .add-friend-input:focus {
+            border-color: var(--accent-color);
+        }
+        .add-friend-btn {
+            height: 48px;
+            padding: 0 20px;
+            border: none;
+            border-radius: 12px;
+            background: var(--accent-color);
+            color: var(--accent-text);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .add-friend-btn:hover {
+            opacity: 0.85;
+            transform: translateY(-1px);
+        }
+        .add-friend-btn:active {
+            transform: translateY(0);
+        }
+        .add-friend-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .add-friend-msg {
+            margin-top: 10px;
+            font-size: 13px;
+            min-height: 20px;
+            transition: all 0.2s;
+        }
+        .add-friend-msg.success { color: #22c55e; }
+        .add-friend-msg.error { color: var(--error); }
+        .friend-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 8px;
+            border-radius: 12px;
+            background: var(--surface-elevated);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .friend-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .friend-item:last-child {
+            border-bottom: none;
+        }
+        .friend-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--surface-elevated);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .friend-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .friend-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .friend-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .friend-time {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 2px;
+        }
+        .friend-remove-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            color: var(--text-tertiary);
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .friend-remove-btn:hover {
+            border-color: var(--error);
+            color: var(--error);
+            background: rgba(220, 38, 38, 0.06);
+        }
+        html.star-bg-active .friend-code-value {
+            background: rgba(99, 102, 241, 0.12);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+        html.star-bg-active .friend-code-copy {
+            border-color: rgba(99, 102, 241, 0.3);
+            background: rgba(99, 102, 241, 0.08);
+        }
+        html.star-bg-active .add-friend-input {
+            background: rgba(99, 102, 241, 0.08);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+        html.star-bg-active .add-friend-btn {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+        html.star-bg-active .friend-avatar {
+            background: rgba(99, 102, 241, 0.15);
+        }
+        @media (max-width: 768px) {
+            .friend-code-value {
+                font-size: 32px;
+                letter-spacing: 6px;
+                padding: 14px 20px;
+            }
+            .friend-code-copy {
+                width: 44px;
+                height: 44px;
+            }
+            .add-friend-input {
+                height: 44px;
+                font-size: 16px;
+            }
+            .add-friend-btn {
+                height: 44px;
+                padding: 0 16px;
+            }
+        }
+        @media (max-width: 480px) {
+            .friend-code-display {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .add-friend-input-wrap {
+                flex-direction: column;
+            }
+            .add-friend-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -2460,6 +2714,11 @@
                 <button class="sidebar-nav-item" data-panel="history" onclick="switchTab('history', this)">
                     <span class="sidebar-nav-icon"><i class="fas fa-history"></i></span>
                     播放历史
+                    <span class="sidebar-nav-arrow"><i class="fas fa-chevron-right"></i></span>
+                </button>
+                <button class="sidebar-nav-item" data-panel="friends" onclick="switchTab('friends', this)">
+                    <span class="sidebar-nav-icon"><i class="fas fa-user-friends"></i></span>
+                    好友
                     <span class="sidebar-nav-arrow"><i class="fas fa-chevron-right"></i></span>
                 </button>
             </nav>
@@ -2755,6 +3014,52 @@
                     </button>
                 </div>
             </section>
+
+            <!-- 好友面板 -->
+            <section class="content-panel" id="panel-friends">
+                <div class="panel-header">
+                    <h1 class="panel-title"><i class="fas fa-user-friends"></i> 好友</h1>
+                    <p class="panel-subtitle">通过好友码添加好友</p>
+                </div>
+
+                <!-- 我的好友码 -->
+                <div class="content-panel-card friend-code-card">
+                    <div class="card-title">我的好友码</div>
+                    <div class="friend-code-display">
+                        <div class="friend-code-value" id="myFriendCode">------</div>
+                        <button class="friend-code-copy" onclick="copyFriendCode()" title="复制好友码">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <p class="friend-code-hint">分享你的好友码，让朋友添加你</p>
+                </div>
+
+                <!-- 添加好友 -->
+                <div class="content-panel-card">
+                    <div class="card-title">添加好友</div>
+                    <div class="add-friend-form">
+                        <div class="add-friend-input-wrap">
+                            <input type="text" id="friendCodeInput" class="add-friend-input" placeholder="输入六位好友码" maxlength="6" inputmode="numeric" pattern="[0-9]*">
+                            <button class="add-friend-btn" id="addFriendBtn" onclick="addFriendByCode()">
+                                <i class="fas fa-user-plus"></i>
+                                <span>添加</span>
+                            </button>
+                        </div>
+                        <div class="add-friend-msg" id="addFriendMsg"></div>
+                    </div>
+                </div>
+
+                <!-- 好友列表 -->
+                <div class="content-panel-card">
+                    <div class="card-title">好友列表 <span class="friend-count" id="friendCount">0</span></div>
+                    <div id="friendsList">
+                        <div class="empty-state">
+                            <i class="fas fa-user-friends"></i>
+                            <p>暂无好友</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
 
@@ -2947,7 +3252,8 @@
         const panelTitles = {
             'account': '账号',
             'points': '积分',
-            'history': '播放历史'
+            'history': '播放历史',
+            'friends': '好友'
         };
 
         // ===== 彩虹条滚动动画（绕过 prefers-reduced-motion） =====
@@ -3094,6 +3400,10 @@
             }
             if (panelName === 'history') {
                 loadPlayHistory();
+            }
+            if (panelName === 'friends') {
+                loadFriendCode();
+                loadFriendsList();
             }
         }
 
@@ -4877,6 +5187,225 @@
             loadUserStats();
             showToast('本地数据已清除', 'success');
         }
+
+        // ===== 好友功能 =====
+        // 获取或创建好友码
+        async function loadFriendCode() {
+            const userId = localStorage.getItem('userId');
+            const sessionToken = localStorage.getItem('sessionToken');
+            if (!userId || !sessionToken) return;
+
+            try {
+                const { data, error } = await supabaseClient.rpc('get_or_create_friend_code', {
+                    _user_id: userId,
+                    _session_token: sessionToken
+                });
+                if (error) throw error;
+                if (data) {
+                    document.getElementById('myFriendCode').textContent = data;
+                }
+            } catch (err) {
+                console.error('加载好友码失败:', err);
+            }
+        }
+
+        // 复制好友码
+        function copyFriendCode() {
+            const code = document.getElementById('myFriendCode').textContent;
+            if (!code || code === '------') return;
+
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.querySelector('.friend-code-copy');
+                btn.classList.add('copied');
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                showToast('好友码已复制', 'success');
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '<i class="fas fa-copy"></i>';
+                }, 2000);
+            }).catch(() => {
+                // 降级方案
+                const textarea = document.createElement('textarea');
+                textarea.value = code;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('好友码已复制', 'success');
+            });
+        }
+
+        // 添加好友
+        async function addFriendByCode() {
+            const userId = localStorage.getItem('userId');
+            const sessionToken = localStorage.getItem('sessionToken');
+            if (!userId || !sessionToken) {
+                showToast('请先登录', 'error');
+                return;
+            }
+
+            const input = document.getElementById('friendCodeInput');
+            const msgEl = document.getElementById('addFriendMsg');
+            const btn = document.getElementById('addFriendBtn');
+            const code = input.value.trim();
+
+            // 验证
+            if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+                msgEl.className = 'add-friend-msg error';
+                msgEl.textContent = '请输入六位数字好友码';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 添加中...';
+            msgEl.textContent = '';
+
+            try {
+                const { data, error } = await supabaseClient.rpc('add_friend_by_code', {
+                    _user_id: userId,
+                    _friend_code: code,
+                    _session_token: sessionToken
+                });
+
+                if (error) throw error;
+
+                if (data && data.success) {
+                    msgEl.className = 'add-friend-msg success';
+                    msgEl.textContent = data.message || '添加成功';
+                    input.value = '';
+                    loadFriendsList();
+                    showToast('好友添加成功', 'success');
+                } else {
+                    msgEl.className = 'add-friend-msg error';
+                    msgEl.textContent = data?.message || '添加失败';
+                }
+            } catch (err) {
+                msgEl.className = 'add-friend-msg error';
+                msgEl.textContent = err.message || '添加失败，请重试';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-user-plus"></i><span>添加</span>';
+            }
+        }
+
+        // 加载好友列表
+        async function loadFriendsList() {
+            const userId = localStorage.getItem('userId');
+            const sessionToken = localStorage.getItem('sessionToken');
+            if (!userId || !sessionToken) return;
+
+            const listEl = document.getElementById('friendsList');
+            const countEl = document.getElementById('friendCount');
+
+            try {
+                const { data, error } = await supabaseClient.rpc('get_friends_list', {
+                    _user_id: userId,
+                    _session_token: sessionToken
+                });
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    countEl.textContent = '0';
+                    listEl.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-user-friends"></i>
+                            <p>暂无好友</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                countEl.textContent = data.length;
+                listEl.innerHTML = data.map(f => `
+                    <div class="friend-item" data-id="${f.friend_id}">
+                        <div class="friend-avatar">
+                            ${f.avatar_url ? `<img src="${f.avatar_url}" alt="">` : `<i class="fas fa-user"></i>`}
+                        </div>
+                        <div class="friend-info">
+                            <div class="friend-name">${escapeHtml(f.username || '用户')}</div>
+                            <div class="friend-time">${formatFriendTime(f.added_at)}</div>
+                        </div>
+                        <button class="friend-remove-btn" onclick="removeFriend('${f.friend_id}')" title="删除好友">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('加载好友列表失败:', err);
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>加载失败</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 删除好友
+        async function removeFriend(friendId) {
+            const userId = localStorage.getItem('userId');
+            const sessionToken = localStorage.getItem('sessionToken');
+            if (!userId || !sessionToken) return;
+
+            if (!confirm('确定要删除这位好友吗？')) return;
+
+            try {
+                const { data, error } = await supabaseClient.rpc('remove_friend', {
+                    _user_id: userId,
+                    _friend_id: friendId,
+                    _session_token: sessionToken
+                });
+
+                if (error) throw error;
+
+                if (data && data.success) {
+                    showToast('好友已删除', 'success');
+                    loadFriendsList();
+                } else {
+                    showToast(data?.message || '删除失败', 'error');
+                }
+            } catch (err) {
+                showToast('删除失败: ' + (err.message || '未知错误'), 'error');
+            }
+        }
+
+        // 格式化好友添加时间
+        function formatFriendTime(isoString) {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 1) return '刚刚添加';
+            if (minutes < 60) return `${minutes}分钟前添加`;
+            if (hours < 24) return `${hours}小时前添加`;
+            if (days < 30) return `${days}天前添加`;
+            return `${date.getMonth() + 1}月${date.getDate()}日添加`;
+        }
+
+        // HTML转义
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // 好友码输入限制：只允许数字
+        document.addEventListener('DOMContentLoaded', () => {
+            const friendInput = document.getElementById('friendCodeInput');
+            if (friendInput) {
+                friendInput.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                });
+                friendInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') addFriendByCode();
+                });
+            }
+        });
     </script>
 </body>
 </html>
